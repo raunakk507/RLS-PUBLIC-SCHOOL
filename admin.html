@@ -1240,14 +1240,7 @@
                         e('span', { className: 'text-[10px] font-bold text-sky-400 text-center' }, syncing ? 'Syncing...' : 'Upload Student File\n(.csv, .xlsx)'),
                         e('input', { type: 'file', accept: '.csv, .xlsx, .xls, .txt', className: 'hidden', onChange: handleFileUpload, disabled: syncing })
                     ),
-                    e('button', { 
-                        onClick: () => triggerSync(true),
-                        disabled: syncing,
-                        className: 'flex flex-col items-center justify-center p-6 border border-slate-850 rounded-xl bg-slate-900/40 hover:bg-slate-900/70 transition-all h-32' 
-                    }, 
-                        e(Icon, { n: 'sparkles', size: 24, cls: 'text-amber-400 mb-2' }),
-                        e('span', { className: 'text-[10px] font-bold text-slate-300' }, 'Generate Sample Data')
-                    )
+                    // Removed Generate Sample Data button to clean up production UI
                 ),
                 students.length > 0 && e('div', { className: 'mt-8' },
                     e('h4', { className: 'text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between' }, 
