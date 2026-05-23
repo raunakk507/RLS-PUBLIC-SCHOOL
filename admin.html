@@ -1173,14 +1173,19 @@
 
             const syncFromSheet = async () => {
                 if (!window.firebaseDB) return alert("Firebase not initialized.");
-                if (!sheetUrl) return alert("Please enter your Google Sheet CSV URL first.");
+                
+                const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (!sheetIdMatch) return alert("Please enter a valid Google Sheet sharing link (must contain /d/...).");
+                const sheetId = sheetIdMatch[1];
                 
                 setSyncing(true);
                 localStorage.setItem('bdms_google_sheet_url', sheetUrl);
                 
+                const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+                
                 try {
-                    const response = await fetch(sheetUrl);
-                    if (!response.ok) throw new Error("Failed to fetch sheet");
+                    const response = await fetch(csvExportUrl);
+                    if (!response.ok) throw new Error("Failed to fetch sheet. Make sure it is shared as 'Anyone with the link can view' or 'edit'.");
                     const csvText = await response.text();
                     
                     // Basic CSV parser
@@ -1231,13 +1236,16 @@
                     await Promise.all(uploadPromises);
                     
                     setSyncing(false);
-                    alert(`Successfully synced ${studentsToUpload.length} students from Google Sheets!`);
+                    alert(`Successfully synced ${studentsToUpload.length} students from the Embedded Google Sheet!`);
                 } catch (error) {
                     console.error("Sheet sync error: ", error);
-                    alert("Sync failed. Check your URL. Make sure it is 'Published to the web' as a CSV. Error: " + error.message);
+                    alert("Sync failed. Check your URL. Make sure link sharing is turned ON. Error: " + error.message);
                     setSyncing(false);
                 }
             };
+
+            const sheetIdMatch = sheetUrl ? sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) : null;
+            const embedUrl = sheetIdMatch ? `https://docs.google.com/spreadsheets/d/${sheetIdMatch[1]}/edit?widget=true&headers=false` : null;
 
             return e('div', { className: 'clay-card p-6 md:p-8 text-white' },
                 e('div', { className: 'flex justify-between items-center mb-6' },
@@ -1256,43 +1264,33 @@
                 ),
                 e('div', { className: 'bg-slate-900/40 p-4 rounded-xl border border-slate-850 space-y-4' },
                     e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2' }, 'Google Sheet CSV URL'),
-                        e('input', { 
-                            type: 'text', 
-                            value: sheetUrl, 
-                            onChange: (e) => setSheetUrl(e.target.value),
-                            placeholder: 'https://docs.google.com/spreadsheets/d/e/.../pub?output=csv',
-                            className: 'w-full p-3 rounded-xl bg-slate-900/80 text-xs font-mono text-sky-300 border border-slate-800 focus:border-sky-500 transition-colors' 
-                        })
-                    ),
-                    e('button', { 
-                        onClick: syncFromSheet,
-                        disabled: syncing,
-                        className: 'w-full flex items-center justify-center p-4 rounded-xl bg-sky-600 hover:bg-sky-500 transition-all font-black text-xs uppercase tracking-wider' 
-                    }, 
-                        syncing ? e('div', { className: 'w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2' }) : e(Icon, { n: 'refresh-cw', size: 16, cls: 'mr-2' }),
-                        syncing ? 'Syncing with Google...' : 'Pull Latest Data from Sheet'
+                        e('label', { className: 'block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2' }, 'Google Sheet Edit Link'),
+                        e('div', { className: 'flex gap-2' },
+                            e('input', { 
+                                type: 'text', 
+                                value: sheetUrl, 
+                                onChange: (e) => setSheetUrl(e.target.value),
+                                placeholder: 'Paste the Google Sheet Share Link here...',
+                                className: 'w-full p-3 rounded-xl bg-slate-900/80 text-xs font-mono text-sky-300 border border-slate-800 focus:border-sky-500 transition-colors' 
+                            }),
+                            e('button', { 
+                                onClick: syncFromSheet,
+                                disabled: syncing || !sheetIdMatch,
+                                className: `flex-shrink-0 flex items-center justify-center px-6 rounded-xl transition-all font-black text-xs uppercase tracking-wider ${sheetIdMatch ? 'bg-sky-600 hover:bg-sky-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}` 
+                            }, 
+                                syncing ? e('div', { className: 'w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2' }) : e(Icon, { n: 'refresh-cw', size: 14, cls: 'mr-2' }),
+                                'Sync to Firebase'
+                            )
+                        )
                     )
                 ),
-                students.length > 0 && e('div', { className: 'mt-8' },
-                    e('h4', { className: 'text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between' }, 
-                        'Current Records',
-                        e('span', { className: 'text-sky-400 font-black' }, `${students.length} Total`)
-                    ),
-                    e('div', { className: 'space-y-3 max-h-60 overflow-y-auto pr-2' },
-                        students.map(s => e('div', { key: s.id, className: 'flex items-center gap-3 p-3 bg-slate-900/50 rounded-xl border border-slate-800' },
-                            e('img', { src: s.photo, className: 'w-10 h-10 rounded-lg object-cover shadow-sm' }),
-                            e('div', { className: 'flex-1' },
-                                e('p', { className: 'text-[11px] font-black text-slate-100 leading-none' }, s.name),
-                                e('p', { className: 'text-[9px] font-bold text-sky-450 mt-1 uppercase tracking-tighter' }, s.id)
-                            ),
-                            e('div', { className: 'text-right' },
-                                e('p', { className: 'text-[10px] font-black text-slate-300' }, s.class),
-                                e('p', { className: 'text-[8px] font-bold text-green-400 uppercase' }, s.status)
-                            )
-                        ))
-                    )
-                )
+                embedUrl && e('div', { className: 'mt-6 border border-slate-800 rounded-xl overflow-hidden bg-white h-[400px]' },
+                    e('iframe', {
+                        src: embedUrl,
+                        className: 'w-full h-full border-0',
+                        title: 'Google Sheet Editor'
+                    })
+                ),
             );
         };
 
