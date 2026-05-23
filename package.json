@@ -1,0 +1,14 @@
+{
+  "name": "bd-modern-school-backend",
+  "version": "1.0.0",
+  "description": "Secure Student Portal & Administrative Staff Desk backend for BD Modern School",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}

@@ -1,0 +1,13 @@
+# Ignore large Tailwind CSS executables (too large for GitHub - 73MB & 131MB)
+tailwindcss.exe
+tailwindcss-win.exe
+
+# Node modules
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

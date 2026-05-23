@@ -1,0 +1,24 @@
+{
+  "name": "BD Modern School Portal",
+  "short_name": "BDMS Portal",
+  "description": "Tuition, Transport, Admissions and digital console for BD Modern School, Mopti, Bhojpur.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0a192f",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "./pwa-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./pwa-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

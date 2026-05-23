@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDMS Administrative Desk | Staff Terminal</title>
+    <link rel="icon" type="image/png" href="../logo.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0ea5e9;
+            --bg: #0b1329;
+            --clay-shadow: 20px 20px 60px #bebebe, -20px -20px 60px #ffffff;
+            --clay-shadow-sm: 10px 10px 30px #bebebe, -10px -10px 30px #ffffff;
+            --clay-inset: inset 6px 6px 12px #bebebe, inset -6px -6px 12px #ffffff;
+        }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background: var(--bg); 
+            color: #f8fafc; 
+            overflow-x: hidden; 
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(20, 184, 166, 0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+        .clay-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2.5rem;
+            box-shadow: 
+                0 30px 60px rgba(0, 0, 0, 0.4),
+                inset -5px -5px 15px rgba(255, 255, 255, 0.05),
+                inset 5px 5px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .clay-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            border-color: rgba(14, 165, 233, 0.25);
+            box-shadow: 0 40px 80px rgba(14, 165, 233, 0.1);
+        }
+        .glass-dark {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .gradient-text { background: linear-gradient(135deg, #0ea5e9 0%, #a855f7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .fade-down { animation: fadeInUp 0.5s ease-out reverse forwards; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #0ea5e9; }
+
+        /* Uiverse logout button adaptation */
+        .Btn {
+          display: flex;
+          align-items: center;
+          justify-content: flex-start;
+          width: 45px;
+          height: 45px;
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          transition-duration: .3s;
+          box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
+          background-color: rgb(239, 68, 68);
+        }
+        .sign {
+          width: 100%;
+          transition-duration: .3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .text {
+          position: absolute;
+          right: 0%;
+          width: 0%;
+          opacity: 0;
+          color: white;
+          font-size: 10px;
+          font-weight: 800;
+          transition-duration: .3s;
+          white-space: nowrap;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .Btn:hover {
+          width: 120px;
+          border-radius: 40px;
+          transition-duration: .3s;
+        }
+        .Btn:hover .sign {
+          width: 35%;
+          transition-duration: .3s;
+          padding-left: 12px;
+        }
+        .Btn:hover .text {
+          opacity: 1;
+          width: 65%;
+          transition-duration: .3s;
+          padding-right: 15px;
+        }
+        .Btn:active {
+          transform: translate(2px ,2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
+    <div id="root"></div>
+
+    <script>
+        // One-time Reset of Local Storage Admissions Database to Clear Legacy Bloated/Wiped Records
+        if (!localStorage.getItem('bdms_db_reset_2026_05_20')) {
+            localStorage.removeItem('bdms_admissions_db');
+            localStorage.setItem('bdms_db_reset_2026_05_20', 'true');
+            console.log('Database reset to clean state successfully.');
+        }
+
+        const e = React.createElement, { useState, useEffect } = React;
+
+        // Custom Dynamic Icon component matching primary app
+        const Icon = ({ n, cls, size = 18 }) => {
+            const containerRef = React.useRef(null);
+            React.useEffect(() => {
+                if (containerRef.current && typeof lucide !== 'undefined') {
+                    containerRef.current.innerHTML = `<i data-lucide="${n}" style="width: ${size}px; height: ${size}px; display: inline-flex;"></i>`;
+                    lucide.createIcons({
+                        targets: [containerRef.current.firstChild]
+                    });
+                }
+            }, [n, size]);
+            return e('span', { 
+                key: n + size, 
+                ref: containerRef, 
+                className: 'inline-flex items-center justify-center ' + (cls || '') 
+            });
+        };
+
+        const useWindowSize = () => {
+            const [width, setWidth] = useState(window.innerWidth);
+            useEffect(() => {
+                const handleResize = () => setWidth(window.innerWidth);
+                window.addEventListener('resize', handleResize);
+                return () => window.removeEventListener('resize', handleResize);
+            }, []);
+            return width;
+        };
+
+        const openBase64Document = (dataUrl, filename = 'document') => {
+            if (!dataUrl) return;
+            if (!dataUrl.startsWith('data:')) {
+                const fullUrl = dataUrl.startsWith('/') || dataUrl.startsWith('http') ? dataUrl : `/uploads/${dataUrl}`;
+                window.open(fullUrl, '_blank');
+                return;
+            }
+            try {
+                const arr = dataUrl.split(',');
+                const mime = arr[0].match(/:(.*?);/)[1];
+                const bstr = atob(arr[1]);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                const blob = new Blob([u8arr], { type: mime });
+                const fileUrl = URL.createObjectURL(blob);
+                
+                const newWin = window.open();
+                if (newWin) {
+                    newWin.document.write(`
+                        <html>
+                            <head>
+                                <title>${filename}</title>
+                                <style>
+                                    body { margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #0f172a; height: 100vh; font-family: system-ui, -apple-system, sans-serif; color: #f8fafc; }
+                                    .container { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; position: relative; }
+                                    iframe { width: 100%; height: calc(100vh - 60px); border: none; }
+                                    img { max-width: 90%; max-height: 85%; object-fit: contain; border-radius: 12px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+                                    .header-bar { display: flex; width: 100%; height: 60px; background: #1e293b; align-items: center; justify-content: space-between; padding: 0 24px; box-sizing: border-box; border-bottom: 1px solid #334155; }
+                                    .btn { background: #0ea5e9; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; text-decoration: none; font-size: 13px; transition: all 0.2s; }
+                                    .btn:hover { background: #0284c7; transform: translateY(-1px); }
+                                    .title { font-size: 14px; font-weight: 800; color: #f1f5f9; }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header-bar">
+                                        <span class="title">${filename}</span>
+                                        <a href="${fileUrl}" download="${filename}" class="btn">Download Document</a>
+                                    </div>
+                                    ${mime.includes('pdf') 
+                                        ? `<iframe src="${fileUrl}"></iframe>` 
+                                        : `<div style="flex:1; display:flex; align-items:center; justify-content:center; width:100%;"><img src="${fileUrl}" alt="${filename}" /></div>`
+                                    }
+                                </div>
+                            </body>
+                        </html>
+                    `);
+                    newWin.document.close();
+                } else {
+                    const link = document.createElement('a');
+                    link.href = fileUrl;
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            } catch (e) {
+                console.error('Error opening document:', e);
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        };
+
+        const SlipPreviewModal = ({ preview, onClose }) => {
+            const [currentPage, setCurrentPage] = useState(1);
+            if (!preview) return null;
+            const docs = preview.docs || {};
+            const photoData = docs.studentPhoto?.data || null;
+            const birthCertData = docs.birthCert?.data || null;
+            const parentIDData = docs.parentID?.data || null;
+
+            return e('div', { className: 'fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[99999] flex items-center justify-center p-4 md:p-6 overflow-y-auto' }, [
+                e('div', { className: 'bg-slate-900/90 border border-slate-700/60 rounded-3xl max-w-4xl w-full p-4 md:p-6 shadow-2xl relative flex flex-col max-h-[90vh]' }, [
+                    // Header
+                    e('div', { className: 'flex justify-between items-center border-b border-slate-800 pb-4 mb-4' }, [
+                        e('div', {}, [
+                            e('h3', { className: 'text-base md:text-lg font-black text-white tracking-tight' }, 'Admission Slip Preview'),
+                            e('p', { className: 'text-[10px] text-sky-400 font-extrabold uppercase tracking-wider' }, `REG NO: ${preview.regNo}`)
+                        ]),
+                        e('button', { 
+                            onClick: onClose,
+                            className: 'w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-all cursor-pointer'
+                        }, e(Icon, { n: 'x', size: 16 }))
+                    ]),
+
+                    // Page preview container
+                    e('div', { className: 'flex-1 overflow-y-auto flex justify-center bg-slate-950/40 rounded-2xl border border-slate-850 p-4 min-h-[300px] mb-4 relative' }, [
+                        e('div', { className: 'relative max-w-full h-auto flex justify-center overflow-hidden' }, [
+                            e('img', { 
+                                src: currentPage === 1 ? preview.page1Url : preview.page2Url,
+                                className: 'max-w-full h-auto object-contain rounded-xl shadow-lg border border-slate-800 transition-all duration-300'
+                            }),
+                            
+                            currentPage === 1 && photoData && e('button', {
+                                onClick: () => openBase64Document(photoData, docs.studentPhoto?.name || 'student_photo.jpg'),
+                                title: 'Click to open Student Photo',
+                                style: {
+                                    position: 'absolute',
+                                    left: '70%',
+                                    top: '32.5%',
+                                    width: '17.5%',
+                                    height: '13.33%',
+                                },
+                                className: 'cursor-pointer border border-transparent hover:border-sky-500 hover:bg-sky-500/10 transition-all rounded-lg flex items-center justify-center group'
+                            }, [
+                                e('div', { className: 'opacity-0 group-hover:opacity-100 bg-slate-950/90 text-white text-[8px] font-bold px-2 py-1 rounded backdrop-blur-sm transition-opacity shadow-md pointer-events-none' }, 'Open Photo')
+                            ]),
+
+                            currentPage === 2 && birthCertData && e('button', {
+                                onClick: () => openBase64Document(birthCertData, docs.birthCert?.name || 'student_aadhaar.pdf'),
+                                title: 'Click to open Student Aadhaar Card',
+                                style: {
+                                    position: 'absolute',
+                                    left: '8.75%',
+                                    top: '21.67%',
+                                    width: '37.5%',
+                                    height: '35.0%',
+                                },
+                                className: 'cursor-pointer border border-transparent hover:border-sky-500 hover:bg-sky-500/10 transition-all rounded-xl flex items-center justify-center group'
+                            }, [
+                                e('div', { className: 'opacity-0 group-hover:opacity-100 bg-slate-950/90 text-white text-[8px] font-bold px-2 py-1 rounded backdrop-blur-sm transition-opacity shadow-md pointer-events-none' }, 'Open Aadhaar')
+                            ]),
+
+                            currentPage === 2 && parentIDData && e('button', {
+                                onClick: () => openBase64Document(parentIDData, docs.parentID?.name || 'parent_id.jpg'),
+                                title: 'Click to open Parent ID Card',
+                                style: {
+                                    position: 'absolute',
+                                    left: '53.75%',
+                                    top: '21.67%',
+                                    width: '37.5%',
+                                    height: '35.0%',
+                                },
+                                className: 'cursor-pointer border border-transparent hover:border-sky-500 hover:bg-sky-500/10 transition-all rounded-xl flex items-center justify-center group'
+                            }, [
+                                e('div', { className: 'opacity-0 group-hover:opacity-100 bg-slate-950/90 text-white text-[8px] font-bold px-2 py-1 rounded backdrop-blur-sm transition-opacity shadow-md pointer-events-none' }, 'Open Parent ID')
+                            ])
+                        ])
+                    ]),
+
+                    // Attachments
+                    (photoData || birthCertData || parentIDData) && e('div', { className: 'flex flex-wrap gap-2 justify-center border-b border-slate-800 pb-3 mb-3' }, [
+                        e('span', { className: 'text-[9px] font-black text-slate-500 uppercase self-center mr-2' }, 'Attachments:'),
+                        photoData && e('button', {
+                            onClick: () => openBase64Document(photoData, docs.studentPhoto?.name || 'student_photo.jpg'),
+                            className: 'px-3 py-1.5 bg-slate-850 hover:bg-sky-950 border border-slate-750 hover:border-sky-850 text-slate-300 hover:text-sky-400 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer'
+                        }, [e(Icon, { n: 'image', size: 10 }), 'Student Photo']),
+                        birthCertData && e('button', {
+                            onClick: () => openBase64Document(birthCertData, docs.birthCert?.name || 'student_aadhaar.pdf'),
+                            className: 'px-3 py-1.5 bg-slate-850 hover:bg-sky-950 border border-slate-750 hover:border-sky-850 text-slate-300 hover:text-sky-400 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer'
+                        }, [e(Icon, { n: 'file-text', size: 10 }), 'Student Aadhaar']),
+                        parentIDData && e('button', {
+                            onClick: () => openBase64Document(parentIDData, docs.parentID?.name || 'parent_id.jpg'),
+                            className: 'px-3 py-1.5 bg-slate-850 hover:bg-sky-950 border border-slate-750 hover:border-sky-850 text-slate-300 hover:text-sky-400 rounded-lg text-[10px] font-extrabold flex items-center gap-1.5 transition-all cursor-pointer'
+                        }, [e(Icon, { n: 'credit-card', size: 10 }), 'Parent ID Card'])
+                    ]),
+
+                    // Navigation & Download controls
+                    e('div', { className: 'flex flex-col sm:flex-row justify-between items-center gap-4 pt-2 border-t border-slate-800' }, [
+                        // Page indicators
+                        e('div', { className: 'flex gap-2' }, [
+                            e('button', {
+                                onClick: () => setCurrentPage(1),
+                                className: `px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${currentPage === 1 ? 'bg-sky-500 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-750'}`
+                            }, 'Page 1'),
+                            e('button', {
+                                onClick: () => setCurrentPage(2),
+                                className: `px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${currentPage === 2 ? 'bg-sky-500 text-white shadow-md' : 'bg-slate-800 text-slate-400 hover:bg-slate-750'}`
+                            }, 'Page 2')
+                        ]),
+
+                        // Action button
+                        e('button', {
+                            onClick: () => {
+                                preview.download();
+                                onClose();
+                            },
+                            className: 'w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black transition-all hover:shadow-lg active:scale-95 flex items-center justify-center gap-2 cursor-pointer border border-emerald-500/20'
+                        }, [e(Icon, { n: 'download', size: 14 }), 'Download PDF Slip ✦'])
+                    ])
+                ])
+            ]);
+        };
+
+        const OFFICIAL_LOGO_BASE64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAF0PSURBVHhe7V0FdFTXuj5+zng8AYIH1+IF2tCW4sWDJgQIDnUq1NJSo6VKS1tqFKlAhdLi7i7BPQQSIsTdZuZ769/nTIjR0nvfe/fe9/qvtVcyM0f3v3+XzXF/w9/wfwFWNu8YtNK/QfeHQzrZK//2N/yHwltdu9rOBtcdct3uvfQmp6UmcxIuiur1Kzb/zw7XqN2LCwtTKp/zN/wHwJnAWp0vW73eu8kr10o4Hi6JR24HH6RHNEdWGx+4OQGZnIgbonrhks3y6qbg4FaVr/E3/JvBJ61aeV/zDpiSafLZm80pKOEEZDVxIPOxVsje3g9FBeNRgqkoyRqD/N96I31yM2TXd8DNcUjjeGey5rPuhHfA6PDWrS2Vr/03/AvhcoMG3ZJt3gtvcmJ8IcehwC4jfXAwsr6/H0VZE+HGJABj4cJouFwj4MJwlGA83JiOouQIZHx9H7J614XTpKKE43BDFC+fC/B5c1fj+q0r3+tv+F+CxW1CvS74eI1LMJt25nICnByH9OYO3Hy+NfJOEQInwY3xAMbAhZEMuU6MgNsdBrhHwQ0aYQD7S8gej7wjQ5D+eBvk17cDnIg0TnbGWawbDvr7hz3epYup8jP8Df8DcDSoQYdUh+9HmbySQEgttEq4ObQusr4LRVHmSMCgVieGwoUwhlD97wiAhmsk4BrDhpshfCScRNkYwc6j84uSxyD7m1BkPxgMp6ygmBNwU1QuXXb4vLk90Ltl5Wf6G/5JWNymjdclf/9xaZJtCylGLo5DTjM7Mua0Qe6JQXAySiUqJGQR0kbpiHSPZJQKjIbbPdqg1hFsMGQzyh4Ft5N+p+/D4MQYNoBIuDAeBfsHIvORFgZV80jnhNJrJuu6k4G1R3wcGmat/Kx/w1+AozXqtE/X7B/mcOZ4Jyeg2Cri5kPBSF95H4rSdSQQ8ogFE7IqDkJs5e/ubOiLYrgxIgBMRmHyWGR+fQ9yQ4mqZZRyElIF09VYb8cba+rWbVb52f+G28CG5s19bgQET0ox2bamciJA1NrcjtTn2yLv2CC42YRHopjJVGK3IxmbrYykf2oQB2AUTlRNC4iompA+Hi5MROHugUh/vCVy6lvZ86VxUvF1u331/lpBQ4cPH/63rK4OTjZs2v663ev9bM56gxScQoeAlAE1kPZtDxRkE7sk2ToO8MhV90i43KMZIIUMIVRiDL8uDUMpTTZIKv92D2eI1Fn4GLgK1U3k6E/O2z9G2z/eQY43e62P7v+4MKy/yXH5h9e/H0P/39g/p53Ttfv8W5fM982nO3L4D6Fp3p5O4/B0/6/cEw/tH027u56/9eA1dG8y5f/r4Wf6/4f+jX+hM/9lSg/QzRfywW0q31g+xL++tD+mF3P8K7xX5d8Glaeqqg1N005JknSMFvNUXZAlSSpTFOWApmlP22w2N23g2Wy2/pIkve8xlizLI1VVnS1JEol5yBAslmW5f4mizKZ9yGvV/wOapv0oyzJ1j3hGkuUYWZYuG65wgiDIFvPkFfG3yZzE9yQn2Hl6uQW8yV/289t59v0/A47vDzn/r/Nvfcv3FUX5URCEMZIkPe4xliRJD6uqukmSpOuGYJKm4P9TknK/rCiHpWle/mXpQx7BoiBYyB4UqG8i+Bov6vL64V7g5es5uUqL59f7d/Z1Nmv/94dO8L9TevjX5wQ/h36M+FkX5EmeZ1k8n5G9eF6xXhQW8W/Xb73O543tB1kE8Tq3B10lE2jV/7sS/b/88L/+t0iUzz1/G/2O98rO0x/WfV74/kPvT5/7j95fKssD4Z76Pz7P/v8W/w0csqpYFfU6/o6/44+4Tpb9f/0bfoK/4z92WPH7r9VfW1f3qep440/1f4P/V73/Vf+H/o7L/xS/r/ZfKz/T//r1b1iV//0f19/xL3T4B/5jhyu/43/o8A9c+Z3+y/V/gL8BwL8Z2Nnsuv/bdf/3r7/jPxfuunW0u3Y13Z1oZ/X/g/+e+4P/+B3+G9d9h/8C/R/Bv86/A+y1f/8b/oNgo92+/n3+A1C/5bX/V739v8D/T3h8Xp7uX+M//wb/VjD/f6v79//n6v2P3t/p/1vVwVq7/n+uv+Nf6PD1f/f1Zc3C3/AfBFb7/pD875P4Zz2hXg75Wf+GvyG4F/+362T/qT45XbX8zN/wfwc+3XbLq3+D/4/wqm9bX/s3/A1/wz/9f/wNf8Pf8Df8Df8D/zv/AXs5W6165G4CAAAAAElFTkSuQmCC';
+                const downloadAdmissionSlip = (student, parent, docs, isPreview = false) => {
+            if (isPreview) {
+                if (typeof window.bdms_set_generating_slip === 'function') {
+                    window.bdms_set_generating_slip(true);
+                }
+            }
+            const loadImage = (src) => {
+                return new Promise((resolve) => {
+                    if (!src) return resolve(null);
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = () => resolve(null);
+                    img.src = src;
+                });
+            };
+
+            const logoSrc = typeof OFFICIAL_LOGO_BASE64 !== 'undefined' ? OFFICIAL_LOGO_BASE64 : null;
+            const photoSrc = (docs && docs.studentPhoto && docs.studentPhoto.data) ? docs.studentPhoto.data : null;
+            const signatureSrc = (docs && docs.parentSignature && docs.parentSignature.data) ? docs.parentSignature.data : null;
+            const parentIDSrc = (docs && docs.parentID && docs.parentID.data) ? docs.parentID.data : null;
+            const birthCertSrc = (docs && docs.birthCert && docs.birthCert.data) ? docs.birthCert.data : null;
+
+            Promise.all([
+                loadImage(logoSrc),
+                loadImage(photoSrc),
+                loadImage(signatureSrc),
+                loadImage(parentIDSrc),
+                loadImage(birthCertSrc)
+            ]).then(([logoImg, photoImg, sigImg, parentIDImg, birthCertImg]) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 2400; // Multi-page structure: 2 pages of 800x1200
+                const ctx = canvas.getContext('2d');
+                ctx.textBaseline = 'top';
+
+                const regNo = student.regNo || Math.random().toString(36).substr(2, 9).toUpperCase();
+
+                // Draw Page 1: Student & Parent Details (0 to 1200 px height)
+                // Draw Background
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, 800, 1200);
+
+                // Add grid background lines for futuristic aesthetic
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 800; i += 40) {
+                    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1200); ctx.stroke();
+                }
+                for (let j = 0; j < 1200; j += 40) {
+                    ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(800, j); ctx.stroke();
+                }
+
+                // Header Banner
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(40, 40, 720, 120);
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(40, 40, 720, 120);
+
+                // Logo
+                if (logoImg) {
+                    ctx.drawImage(logoImg, 60, 60, 80, 80);
+                }
+
+                // Title
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'black 22px Arial, sans-serif';
+                ctx.fillText('BDMS PORTAL ✦ ADMISSION SLIP', 160, 65);
+                ctx.fillStyle = '#0284c7';
+                ctx.font = 'bold 11px Arial, sans-serif';
+                ctx.fillText('OFFICIAL DIGITAL ENROLLMENT RECORD', 160, 95);
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'bold 11px Arial, sans-serif';
+                ctx.fillText(`CANDIDATE REGISTRATION NO: ${regNo}`, 160, 115);
+
+                // Student Photo Frame
+                const photoX = 560;
+                const photoY = 200;
+                const photoW = 200;
+                const photoH = 220;
+
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(photoX, photoY, photoW, photoH);
+                ctx.strokeStyle = '#38bdf8';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(photoX, photoY, photoW, photoH);
+
+                if (photoImg) {
+                    ctx.drawImage(photoImg, photoX + 10, photoY + 10, photoW - 20, photoH - 20);
+                } else {
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('NO PHOTO', photoX + (photoW / 2), photoY + (photoH / 2) - 10);
+                    ctx.fillText('UPLOADED', photoX + (photoW / 2), photoY + (photoH / 2) + 10);
+                    ctx.textAlign = 'left';
+                }
+
+                // Left side: Enrollment Details
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('1. ENROLLMENT SPECIFICATION', 40, 200);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Arial, sans-serif';
+                ctx.fillText('ACADEMIC YEAR:', 40, 235);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText('2026/2027', 180, 235);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('DEPARTMENT:', 40, 260);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(student.department || 'General Science & IT', 180, 260);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('CLASS GRADE:', 40, 285);
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillText(student.grade || 'Grade 10', 180, 285);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.fillText('RECORD STATUS:', 40, 310);
+                ctx.fillStyle = '#10b981'; // Emerald Green
+                ctx.fillText('VERIFIED ✦ APPROVED', 180, 310);
+
+                // Student Personal Details Section
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('2. STUDENT INFORMATION', 40, 370);
+
+                const studentFields = [
+                    ['FULL NAME:', student.name || student.fullName || ''],
+                    ['GENDER:', student.gender || ''],
+                    ['DATE OF BIRTH:', student.dob || ''],
+                    ['RELIGION:', student.religion || ''],
+                    ['BLOOD GROUP:', student.bloodGroup || 'N/A'],
+                    ['CONTACT PHONE:', student.phone || student.contact || '']
+                ];
+
+                let curY = 405;
+                ctx.font = 'bold 12px Arial, sans-serif';
+                studentFields.forEach(([lbl, val]) => {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(lbl, 40, curY);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText(val, 180, curY);
+                    curY += 25;
+                });
+
+                // Parent Details Section
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('3. PARENT / GUARDIAN RECORD', 40, 590);
+
+                const parentFields = [
+                    ['FATHER NAME:', parent.fatherName || ''],
+                    ['FATHER OCCUPATION:', parent.fatherOccupation || ''],
+                    ['MOTHER NAME:', parent.motherName || ''],
+                    ['MOTHER OCCUPATION:', parent.motherOccupation || ''],
+                    ['ANNUAL INCOME:', parent.income || ''],
+                    ['EMERGENCY CONTACT:', parent.phone || '']
+                ];
+
+                curY = 625;
+                ctx.font = 'bold 12px Arial, sans-serif';
+                parentFields.forEach(([lbl, val]) => {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(lbl, 40, curY);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.fillText(val, 200, curY);
+                    curY += 25;
+                });
+
+                // Present Address Block
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('4. RESIDENTIAL ADDRESS', 40, 810);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(40, 840, 720, 70);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(40, 840, 720, 70);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 12px Arial, sans-serif';
+                const addr = parent.address || 'Not Provided';
+                ctx.fillText(addr, 55, 855);
+
+                // Parent Signature Box
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('5. DIGITAL DECLARATION', 40, 940);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(40, 970, 340, 110);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(40, 970, 340, 110);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 10px Arial, sans-serif';
+                ctx.fillText('CANDIDATE SIGNATURE / THUMB PRINT', 55, 985);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'italic bold 15px Arial, sans-serif';
+                ctx.fillText(student.name || 'Candidate Signature', 90, 1030);
+
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(420, 970, 340, 110);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(420, 970, 340, 110);
+
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = 'bold 10px Arial, sans-serif';
+                ctx.fillText('PARENT / GUARDIAN DIGITAL SIGNATURE', 435, 985);
+
+                if (sigImg) {
+                    ctx.drawImage(sigImg, 490, 1000, 200, 65);
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'italic bold 15px Arial, sans-serif';
+                    ctx.fillText(parent.fatherName || 'Parent Signature', 490, 1030);
+                }
+
+                // Official Seal and Instructions Footer
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 1130, 800, 70);
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(40, 1130, 720, 1);
+
+                ctx.fillStyle = '#475569';
+                ctx.font = 'bold 9px Arial, sans-serif';
+                ctx.fillText('This document is electronically generated and verified by the BDMS Admissions Office. No manual signature is required.', 40, 1145);
+                ctx.fillText('Verification Code: ' + regNo + '-' + Date.now().toString().slice(-4), 40, 1165);
+
+                // Draw Page 2: Verified Uploaded Documents (1200 to 2400 px height)
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 1200, 800, 1200);
+
+                // Add grid background lines for Page 2
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 800; i += 40) {
+                    ctx.beginPath(); ctx.moveTo(i, 1200); ctx.lineTo(i, 2400); ctx.stroke();
+                }
+                for (let j = 1200; j < 2400; j += 40) {
+                    ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(800, j); ctx.stroke();
+                }
+
+                // Page 2 Header Banner
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(40, 1240, 720, 120);
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(40, 1240, 720, 120);
+
+                if (logoImg) {
+                    ctx.drawImage(logoImg, 60, 1260, 80, 80);
+                }
+
+                // Title Page 2
+                ctx.fillStyle = '#0f172a';
+                ctx.font = 'black 22px Arial, sans-serif';
+                ctx.fillText('BDMS PORTAL ✦ ADMISSION SLIP', 160, 1265);
+                ctx.fillStyle = '#0284c7';
+                ctx.font = 'bold 11px Arial, sans-serif';
+                ctx.fillText('OFFICIAL DIGITAL ENROLLMENT RECORD - PAGE 2', 160, 1295);
+                ctx.fillStyle = '#64748b';
+                ctx.font = 'bold 11px Arial, sans-serif';
+                ctx.fillText(`CANDIDATE REGISTRATION NO: ${regNo}`, 160, 1315);
+
+                // Subtitle Page 2
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'black 16px Arial, sans-serif';
+                ctx.fillText('6. ATTACHED VERIFIED CERTIFICATES', 40, 1400);
+
+                // Birth Certificate Panel
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(40, 1440, 340, 640);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(40, 1440, 340, 640);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px Arial, sans-serif';
+                ctx.fillText('A. BIRTH CERTIFICATE / NID', 60, 1460);
+
+                if (birthCertImg) {
+                    ctx.drawImage(birthCertImg, 55, 1490, 310, 560);
+                } else {
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(55, 1490, 310, 560);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('NO DIGITAL BIRTH CERTIFICATE', 210, 1750);
+                    ctx.fillText('OR NATIONAL ID ATTACHED', 210, 1775);
+                    ctx.textAlign = 'left';
+                }
+
+                // Parent ID Panel
+                ctx.fillStyle = '#1e293b';
+                ctx.fillRect(420, 1440, 340, 640);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(420, 1440, 340, 640);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px Arial, sans-serif';
+                ctx.fillText('B. PARENT IDENTIFICATION CARD', 440, 1460);
+
+                if (parentIDImg) {
+                    ctx.drawImage(parentIDImg, 435, 1490, 310, 560);
+                } else {
+                    ctx.fillStyle = '#334155';
+                    ctx.fillRect(435, 1490, 310, 560);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = 'bold 12px Arial, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('NO DIGITAL IDENTIFICATION CARD', 590, 1750);
+                    ctx.fillText('FOR PARENT / GUARDIAN ATTACHED', 590, 1775);
+                    ctx.textAlign = 'left';
+                }
+
+                // Page 2 Footer
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 2330, 800, 70);
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(40, 2330, 720, 1);
+
+                ctx.fillStyle = '#475569';
+                ctx.font = 'bold 9px Arial, sans-serif';
+                ctx.fillText('All documents attached are electronically verified during the registration process.', 40, 2345);
+                ctx.fillText('BDMS System Reference ID: ' + regNo.slice(0,4) + '-' + Date.now().toString().slice(-6), 40, 2365);
+
+                const downloadHandler = () => {
+                    if (window.jspdf) {
+                        try {
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF({
+                                orientation: 'portrait',
+                                unit: 'pt',
+                                format: [800, 1200]
+                            });
+
+                            // Slice Page 1
+                            const canvas1 = document.createElement('canvas');
+                            canvas1.width = 800;
+                            canvas1.height = 1200;
+                            const ctx1 = canvas1.getContext('2d');
+                            ctx1.drawImage(canvas, 0, 0, 800, 1200, 0, 0, 800, 1200);
+                            const imgData1 = canvas1.toDataURL('image/jpeg', 1.0);
+                            doc.addImage(imgData1, 'JPEG', 0, 0, 800, 1200);
+
+                            // Slice Page 2
+                            const canvas2 = document.createElement('canvas');
+                            canvas2.width = 800;
+                            canvas2.height = 1200;
+                            const ctx2 = canvas2.getContext('2d');
+                            ctx2.drawImage(canvas, 0, 1200, 800, 1200, 0, 0, 800, 1200);
+                            const imgData2 = canvas2.toDataURL('image/jpeg', 1.0);
+                            doc.addPage([800, 1200]);
+                            doc.addImage(imgData2, 'JPEG', 0, 0, 800, 1200);
+
+                            doc.save(`BDMS_AdmissionSlip_${regNo}.pdf`);
+                            return;
+                        } catch (pdfErr) {
+                            console.error('jsPDF generation failed, falling back to PNG', pdfErr);
+                        }
+                    }
+
+                    // Fallback to high quality PNG if jsPDF library is not loaded
+                    const dataUrl = canvas.toDataURL('image/png');
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `BDMS_AdmissionSlip_${regNo}.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                if (isPreview) {
+                    // Create image URLs from slices to show in preview modal
+                    const canvas1 = document.createElement('canvas');
+                    canvas1.width = 800;
+                    canvas1.height = 1200;
+                    const ctx1 = canvas1.getContext('2d');
+                    ctx1.drawImage(canvas, 0, 0, 800, 1200, 0, 0, 800, 1200);
+                    const page1Url = canvas1.toDataURL('image/png');
+
+                    const canvas2 = document.createElement('canvas');
+                    canvas2.width = 800;
+                    canvas2.height = 1200;
+                    const ctx2 = canvas2.getContext('2d');
+                    ctx2.drawImage(canvas, 0, 1200, 800, 1200, 0, 0, 800, 1200);
+                    const page2Url = canvas2.toDataURL('image/png');
+
+                    if (typeof window.bdms_set_generating_slip === 'function') {
+                        window.bdms_set_generating_slip(false);
+                    }
+                    if (typeof window.bdms_show_slip_preview === 'function') {
+                        window.bdms_show_slip_preview({
+                            regNo,
+                            page1Url,
+                            page2Url,
+                            docs,
+                            download: downloadHandler
+                        });
+                    }
+                } else {
+                    downloadHandler();
+                }
+            });
+        };
+
+        const downloadReceipt = (receipt) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 800;
+            canvas.height = 1000;
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, 800, 1000);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, 800, 180);
+
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 32px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('B.D. MODERN SCHOOL', 400, 40);
+
+            ctx.fillStyle = '#0284c7';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillText('MOPTI, BHOJPUR, BIHAR · ENGLISH MEDIUM CO-ED', 400, 90);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(40, 220, 720, 720);
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(40, 220, 720, 720);
+
+            ctx.fillStyle = '#f0fdf4';
+            ctx.fillRect(60, 240, 680, 70);
+            ctx.fillStyle = '#166534';
+            ctx.font = 'bold 22px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('✓ FEE TRANSACTION SUCCESSFUL', 90, 262);
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 15px sans-serif';
+            ctx.fillText('Student Name:', 70, 390);
+            ctx.fillText('Student ID:', 70, 430);
+            ctx.fillStyle = '#0f172a';
+            ctx.font = '900 15px sans-serif';
+            ctx.fillText(receipt.studentName, 220, 390);
+            ctx.fillText(receipt.studentId, 220, 430);
+
+            ctx.fillStyle = '#16a34a';
+            ctx.font = '900 22px sans-serif';
+            ctx.fillText(`INR ₹${receipt.amount.toLocaleString()}.00`, 300, 860);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `BDMS_Office_Receipt_${receipt.orderId}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        const StudentDatabaseManager = () => {
+            const [syncing, setSyncing] = useState(false);
+            const [students, setStudents] = useState([]);
+            const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
+
+            useEffect(() => {
+                const loadData = () => {
+                    const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
+                    setStudents(db);
+                    setDbStats({ count: db.length, lastSync: localStorage.getItem('bdms_firebase_sync') || 'Never' });
+                };
+                loadData();
+
+                const handleStorageChange = (e) => {
+                    if (e.key === 'bdms_firebase_mock' || e.key === 'bdms_firebase_sync') {
+                        loadData();
+                    }
+                };
+                window.addEventListener('storage', handleStorageChange);
+
+                return () => {
+                    window.removeEventListener('storage', handleStorageChange);
+                };
+            }, [syncing]);
+
+            const downloadTemplate = () => {
+                const csvContent = "ID,Name,FatherName,DOB,Address,Class,Attendance,Rank,PhotoURL\nBDMS001,Rahul Kumar,Suresh Kumar,12/05/2010,\"Mopti Bazar, Bhojpur\",10th,95%,#1,https://images.unsplash.com/photo-1597223557154-721c1cecc4b0\nBDMS002,Priya Sharma,Rajesh Sharma,22/08/2011,\"Piro Road, Bhojpur\",10th,88%,#12,https://images.unsplash.com/photo-1544005313-94ddf0286df2";
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', 'bdms_student_template.csv');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+
+            const triggerSync = (isSample = false) => {
+                setSyncing(true);
+                setTimeout(() => {
+                    const mockData = [
+                        { id: 'BDMS001', name: 'Rahul Kumar', fname: 'Suresh Kumar', dob: '12/05/2010', address: 'Mopti Bazar, Bhojpur', photo: 'https://images.unsplash.com/photo-1597223557154-721c1cecc4b0?auto=format&fit=crop&q=80&w=100', class: '10th', attendance: '95%', rank: '#1', courses: '06', status: 'Active', fees: '1,500' },
+                        { id: 'BDMS002', name: 'Priya Sharma', fname: 'Rajesh Sharma', dob: '22/08/2011', address: 'Piro Road, Bhojpur', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100', class: '10th', attendance: '88%', rank: '#12', courses: '06', status: 'Active', fees: '1,200' },
+                        { id: 'BDMS003', name: 'Amit Singh', fname: 'Vijay Singh', dob: '05/01/2012', address: 'Sikarhatta, Bhojpur', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100', class: '9th', attendance: '92%', rank: '#5', courses: '05', status: 'Active', fees: '1,800' }
+                    ];
+                    localStorage.setItem('bdms_firebase_mock', JSON.stringify(mockData));
+                    const time = new Date().toLocaleTimeString();
+                    localStorage.setItem('bdms_firebase_sync', time);
+                    setSyncing(false);
+                    alert(isSample ? 'Sample data successfully injected into Firebase!' : 'Successfully synced student records from file!');
+                }, 1500);
+            };
+
+            const handleFileUpload = (e_file) => {
+                const file = e_file.target.files[0];
+                if (!file) return;
+                triggerSync(false);
+            };
+
+            return e('div', { className: 'clay-card p-6 md:p-8 text-white' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2' }, [e(Icon, { n: 'database', size: 18, cls: 'text-sky-400' }), 'Firebase DB Sync']),
+                    e('button', { onClick: downloadTemplate, className: 'text-[9px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-1.5 hover:text-sky-300 transition-all' }, [e(Icon, { n: 'download', size: 12 }), 'Download Template'])
+                ),
+                e('div', { className: 'mb-6 flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800' },
+                    e('div', null,
+                        e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest' }, 'Cloud Records'),
+                        e('p', { className: 'text-2xl font-black text-slate-100' }, dbStats.count)
+                    ),
+                    e('div', { className: 'text-right' },
+                        e('p', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest' }, 'Last Sync'),
+                        e('p', { className: 'text-xs font-bold text-slate-300' }, dbStats.lastSync)
+                    )
+                ),
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-4' },
+                    e('label', { className: 'flex flex-col items-center justify-center p-6 border-2 border-dashed border-sky-500/30 rounded-xl bg-slate-900/40 hover:bg-slate-900/80 transition-colors cursor-pointer h-32' },
+                        syncing ? e('div', { className: 'w-6 h-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-2' }) : e(Icon, { n: 'upload-cloud', size: 24, cls: 'text-sky-400 mb-2' }),
+                        e('span', { className: 'text-[10px] font-bold text-sky-400 text-center' }, syncing ? 'Syncing...' : 'Upload Student File\n(.csv, .xlsx)'),
+                        e('input', { type: 'file', accept: '.csv, .xlsx, .xls, .txt', className: 'hidden', onChange: handleFileUpload, disabled: syncing })
+                    ),
+                    e('button', { 
+                        onClick: () => triggerSync(true),
+                        disabled: syncing,
+                        className: 'flex flex-col items-center justify-center p-6 border border-slate-850 rounded-xl bg-slate-900/40 hover:bg-slate-900/70 transition-all h-32' 
+                    }, 
+                        e(Icon, { n: 'sparkles', size: 24, cls: 'text-amber-400 mb-2' }),
+                        e('span', { className: 'text-[10px] font-bold text-slate-300' }, 'Generate Sample Data')
+                    )
+                ),
+                students.length > 0 && e('div', { className: 'mt-8' },
+                    e('h4', { className: 'text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between' }, 
+                        'Current Records',
+                        e('span', { className: 'text-sky-400 font-black' }, `${students.length} Total`)
+                    ),
+                    e('div', { className: 'space-y-3 max-h-60 overflow-y-auto pr-2' },
+                        students.map(s => e('div', { key: s.id, className: 'flex items-center gap-3 p-3 bg-slate-900/50 rounded-xl border border-slate-800' },
+                            e('img', { src: s.photo, className: 'w-10 h-10 rounded-lg object-cover shadow-sm' }),
+                            e('div', { className: 'flex-1' },
+                                e('p', { className: 'text-[11px] font-black text-slate-100 leading-none' }, s.name),
+                                e('p', { className: 'text-[9px] font-bold text-sky-450 mt-1 uppercase tracking-tighter' }, s.id)
+                            ),
+                            e('div', { className: 'text-right' },
+                                e('p', { className: 'text-[10px] font-black text-slate-300' }, s.class),
+                                e('p', { className: 'text-[8px] font-bold text-green-400 uppercase' }, s.status)
+                            )
+                        ))
+                    )
+                )
+            );
+        };
+
+        const AdminSessionManager = () => {
+            const [sessions, setSessions] = useState([
+                { id: 1, device: 'Windows Desktop - Chrome', ip: '103.88.22.41', loc: 'Bhojpur, India', time: 'Just now (This Device)', current: true },
+                { id: 2, device: 'iPhone 15 - Safari', ip: '192.168.1.102', loc: 'Patna, India', time: '2 hours ago', current: false },
+                { id: 3, device: 'Android Tablet - Chrome', ip: '157.44.11.90', loc: 'Delhi, India', time: 'May 15, 10:24 AM', current: false }
+            ]);
+
+            const revoke = id => {
+                if (confirm('Are you sure you want to revoke access for this device?')) {
+                    setSessions(sessions.filter(s => s.id !== id));
+                    alert('Session revoked successfully. The device has been logged out.');
+                }
+            };
+
+            return e('div', { className: 'clay-card p-6 md:p-8 text-white fade-up' },
+                e('div', { className: 'flex justify-between items-center mb-6' },
+                    e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2' }, [e(Icon, { n: 'shield', size: 18, cls: 'text-sky-400' }), 'Device Access Control']),
+                    e('span', { className: 'px-3 py-1 bg-green-500/20 text-green-400 text-[10px] font-black rounded-full flex items-center gap-1.5' }, [
+                        e('span', { className: 'w-2 h-2 bg-green-550 rounded-full animate-pulse' }), `${sessions.length} Active Terminals`
+                    ])
+                ),
+                e('div', { className: 'space-y-4' },
+                    sessions.map(s => e('div', { key: s.id, className: 'flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border border-slate-800 bg-slate-900/40 gap-4' },
+                        e('div', { className: 'flex items-start gap-3' },
+                            e('div', { className: 'w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-slate-300 flex-shrink-0' }, e(Icon, { n: s.device.includes('iPhone') ? 'smartphone' : s.device.includes('Tablet') ? 'tablet' : 'laptop', size: 20 })),
+                            e('div', null,
+                                e('p', { className: 'text-sm font-black text-slate-100 flex items-center gap-2' }, [
+                                    s.device,
+                                    s.current && e('span', { className: 'px-2 py-0.5 bg-sky-500/20 text-sky-400 text-[8px] font-extrabold rounded' }, 'THIS DEVICE')
+                                ]),
+                                e('p', { className: 'text-[10px] font-bold text-slate-400 mt-1' }, `IP: ${s.ip} · ${s.loc} · ${s.time}`)
+                            )
+                        ),
+                        !s.current && e('button', { onClick: () => revoke(s.id), className: 'px-4 py-2 bg-rose-500/10 text-rose-450 hover:bg-rose-600 hover:text-white transition-all text-xs font-black rounded-xl border border-rose-500/20' }, 'Revoke Access')
+                    ))
+                )
+            );
+        };
+
+        const StaffManager = () => {
+            const [staff, setStaff] = useState([
+                { id: 'T001', name: 'Vikash Singh', role: 'Principal', dept: 'Administration', status: 'Active' },
+                { id: 'T002', name: 'Sneha Sharma', role: 'Science HOD', dept: 'Secondary Science', status: 'Active' },
+                { id: 'T003', name: 'Ramesh Kumar', role: 'Maths Faculty', dept: 'High School Maths', status: 'On Leave' },
+                { id: 'T004', name: 'Ananya Sen', role: 'English Faculty', dept: 'Primary English', status: 'Active' }
+            ]);
+            const [name, setName] = useState('');
+            const [role, setRole] = useState('');
+            const [dept, setDept] = useState('');
+
+            const addMember = e_ev => {
+                e_ev.preventDefault();
+                if (!name || !role) return;
+                const newMember = {
+                    id: 'T' + String(staff.length + 1).padStart(3, '0'),
+                    name, role, dept: dept || 'General', status: 'Active'
+                };
+                setStaff([...staff, newMember]);
+                setName(''); setRole(''); setDept('');
+                alert('New staff member added successfully!');
+            };
+
+            const toggleStatus = id => {
+                setStaff(staff.map(s => s.id === id ? { ...s, status: s.status === 'Active' ? 'On Leave' : 'Active' } : s));
+            };
+
+            const removeStaff = id => {
+                if (confirm('Are you sure you want to remove this staff member?')) {
+                    setStaff(staff.filter(s => s.id !== id));
+                }
+            };
+
+            return e('div', { className: 'grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 fade-up text-white' },
+                e('div', { className: 'lg:col-span-2 clay-card p-6 md:p-8 border border-slate-800' },
+                    e('h3', { className: 'text-lg md:text-xl font-black mb-6 flex items-center gap-2' }, [e(Icon, { n: 'users', size: 18, cls: 'text-purple-400' }), 'Staff Roster']),
+                    e('div', { className: 'space-y-4 max-h-[450px] overflow-y-auto pr-2' },
+                        staff.map(s => e('div', { key: s.id, className: 'flex items-center justify-between p-4 bg-slate-900/40 border border-slate-850 rounded-xl hover:bg-slate-900/80 transition-colors' },
+                            e('div', null,
+                                e('h4', { className: 'text-sm font-black text-slate-100' }, s.name),
+                                e('p', { className: 'text-[10px] font-bold text-slate-400 mt-1' }, `${s.id} · ${s.role} (${s.dept})`)
+                            ),
+                            e('div', { className: 'flex items-center gap-3' },
+                                e('button', { 
+                                    onClick: () => toggleStatus(s.id), 
+                                    className: `px-3 py-1.5 text-[9px] font-black uppercase rounded-lg tracking-wider transition-all ${s.status === 'Active' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}` 
+                                }, s.status),
+                                e('button', { onClick: () => removeStaff(s.id), className: 'p-2 text-rose-400 hover:bg-rose-500/25 rounded-lg transition-colors' }, e(Icon, { n: 'trash-2', size: 14 }))
+                            )
+                        ))
+                    )
+                ),
+                e('div', { className: 'clay-card p-6 md:p-8 border border-slate-800' },
+                    e('h3', { className: 'text-lg md:text-xl font-black mb-6' }, 'Add Staff Member'),
+                    e('form', { onSubmit: addMember, className: 'space-y-4' },
+                        e('div', null,
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Full Name'),
+                            e('input', { type: 'text', value: name, onChange: x => setName(x.target.value), className: 'w-full p-3 rounded-xl bg-slate-900/60 text-white border border-slate-800 font-bold text-xs', placeholder: 'e.g., Prof. Kumar', required: true })
+                        ),
+                        e('div', null,
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Designation'),
+                            e('input', { type: 'text', value: role, onChange: x => setRole(x.target.value), className: 'w-full p-3 rounded-xl bg-slate-900/60 text-white border border-slate-800 font-bold text-xs', placeholder: 'e.g., Chemistry HOD', required: true })
+                        ),
+                        e('div', null,
+                            e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Department'),
+                            e('input', { type: 'text', value: dept, onChange: x => setDept(x.target.value), className: 'w-full p-3 rounded-xl bg-slate-900/60 text-white border border-slate-800 font-bold text-xs', placeholder: 'e.g., Science Dept' })
+                        ),
+                        e('button', { type: 'submit', className: 'w-full bg-purple-600 text-white p-4 rounded-xl font-black text-xs hover:bg-purple-700 transition-all flex items-center justify-center gap-2 mt-4 shadow-lg shadow-purple-500/20' }, [e(Icon, { n: 'user-plus', size: 14 }), 'Register Staff'])
+                    )
+                )
+            );
+        };
+
+        const DepartmentalReceiptModal = ({ receipt, onClose }) => {
+            return e('div', { className: 'fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-fade-in' }, 
+                e('div', { className: 'max-w-md w-full bg-slate-900 rounded-[2.5rem] shadow-2xl p-6 md:p-8 relative border border-slate-800 fade-up text-white' }, [
+                    e('button', { 
+                        onClick: onClose, 
+                        className: 'absolute top-6 right-6 w-10 h-10 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-full flex items-center justify-center transition-all z-20 shadow-sm border border-slate-700' 
+                    }, e(Icon, { n: 'x', size: 18 })),
+
+                    e('div', { className: 'text-center mb-6' }, [
+                        e('div', { className: 'w-12 h-12 bg-sky-500/20 text-sky-400 rounded-full flex items-center justify-center mx-auto mb-3 border border-sky-500/30' }, e(Icon, { n: 'database', size: 24 })),
+                        e('h2', { className: 'text-xl font-black text-slate-100' }, 'Department Audit Copy'),
+                        e('p', { className: 'text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1' }, 'Internal School Record & Ledger Sync')
+                    ]),
+
+                    e('div', { className: 'bg-slate-950 p-6 rounded-3xl relative overflow-hidden flex flex-col justify-between border border-slate-850 shadow-md mb-6' }, [
+                        e('div', { className: 'absolute -right-16 -top-16 w-32 h-32 bg-sky-500/5 rounded-full' }),
+                        e('div', { className: 'space-y-4' }, [
+                            e('div', { className: 'flex justify-between items-start border-b border-dashed border-slate-800 pb-3' }, [
+                                e('div', null, [
+                                    e('p', { className: 'text-[9px] font-black text-sky-400 uppercase tracking-widest' }, 'DEPARTMENT COPY'),
+                                    e('h4', { className: 'text-xs font-black text-slate-100 mt-0.5' }, 'B.D. Modern School')
+                                ]),
+                                e('span', { className: 'px-2 py-0.5 bg-sky-500/20 text-sky-400 text-[8px] font-black rounded-md tracking-wider' }, 'SYNCED')
+                            ]),
+
+                            e('div', { className: 'space-y-2.5 text-xs text-slate-350' }, [
+                                e('div', { className: 'flex justify-between' }, [e('span', { className: 'text-slate-500 font-bold' }, 'Audit Code:'), e('span', { className: 'font-mono text-slate-300 font-bold text-[10px]' }, receipt.authCode)]),
+                                e('div', { className: 'flex justify-between' }, [e('span', { className: 'text-slate-500 font-bold' }, 'Database Status:'), e('span', { className: 'font-black text-green-400 text-[10px]' }, 'SUCCESS_SYNC')]),
+                                e('div', { className: 'flex justify-between' }, [e('span', { className: 'text-slate-500 font-bold' }, 'Server IP Log:'), e('span', { className: 'font-mono text-slate-400' }, receipt.ip)]),
+                                e('div', { className: 'flex justify-between border-t border-slate-850 pt-2.5' }, [e('span', { className: 'text-slate-500 font-bold' }, 'Student Name:'), e('span', { className: 'font-black text-slate-100' }, receipt.studentName)]),
+                                e('div', { className: 'flex justify-between' }, [e('span', { className: 'text-slate-500 font-bold' }, 'Student ID:'), e('span', { className: 'font-black text-sky-400' }, receipt.studentId)]),
+                            ])
+                        ]),
+                        
+                        e('div', { className: 'mt-6 pt-4 border-t border-slate-850 flex justify-between items-end' }, [
+                            e('div', null, [
+                                e('p', { className: 'text-[9px] text-slate-500 font-black uppercase' }, 'Audited Amount'),
+                                e('p', { className: 'text-xl font-black text-sky-400 font-bold' }, `₹${receipt.amount.toLocaleString()}`)
+                            ]),
+                            e('div', { className: 'text-right' }, [
+                                e('p', { className: 'text-[7px] text-slate-500 font-bold uppercase' }, 'Accounts Dept Approval'),
+                                e('div', { className: 'text-[10px] text-rose-400 font-mono font-black mt-0.5' }, 'FILED & CONFIRMED')
+                            ])
+                        ])
+                    ]),
+
+                    e('button', { 
+                        onClick: onClose,
+                        className: 'w-full px-6 py-3.5 bg-slate-800 hover:bg-slate-750 text-white rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2'
+                    }, [e(Icon, { n: 'check', size: 14 }), 'Audit Confirmed & Closed'])
+                ])
+            );
+        };
+
+        const FeeManager = () => {
+            const [students, setStudents] = useState([]);
+            const [trigger, setTrigger] = useState(0);
+            const [accrueAmount, setAccrueAmount] = useState('2500');
+            const [selectedReceipt, setSelectedReceipt] = useState(null);
+
+            useEffect(() => {
+                const loadStudents = () => {
+                    const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
+                    setStudents(db);
+                };
+                loadStudents();
+
+                const handleStorageChange = (e) => {
+                    if (e.key === 'bdms_firebase_mock' || e.key === 'bdms_departmental_receipts') {
+                        loadStudents();
+                    }
+                };
+                window.addEventListener('storage', handleStorageChange);
+
+                return () => {
+                    window.removeEventListener('storage', handleStorageChange);
+                };
+            }, [trigger]);
+
+            const markAsPaid = id => {
+                const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
+                let targetStudent = null;
+                const updated = db.map(s => {
+                    if (s.id === id) {
+                        targetStudent = s;
+                        return { ...s, fees: '0' };
+                    }
+                    return s;
+                });
+                localStorage.setItem('bdms_firebase_mock', JSON.stringify(updated));
+                
+                const sessionObj = JSON.parse(localStorage.getItem('bdms_student_session') || 'null');
+                if (sessionObj && sessionObj.id === id) {
+                    sessionObj.fees = '0';
+                    localStorage.setItem('bdms_student_session', JSON.stringify(sessionObj));
+                }
+
+                if (targetStudent) {
+                    const amountVal = parseFloat((targetStudent.fees || '0').toString().replace(/,/g, ''));
+                    if (amountVal > 0) {
+                        const receiptPayload = {
+                            txId: 'CASH-' + Math.floor(Math.random() * 1000000),
+                            amount: amountVal,
+                            date: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+                            studentId: targetStudent.id,
+                            studentName: targetStudent.name,
+                            studentClass: targetStudent.class,
+                            orderId: 'RCPT-CASH-' + Math.floor(100000 + Math.random() * 900000),
+                            authCode: 'AUTH-CASH-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+                            ip: 'Office Terminal'
+                        };
+                        const deptReceipts = JSON.parse(localStorage.getItem('bdms_departmental_receipts') || '[]');
+                        deptReceipts.push(receiptPayload);
+                        localStorage.setItem('bdms_departmental_receipts', JSON.stringify(deptReceipts));
+                    }
+                }
+
+                alert('Fee payment marked as successful! Student portal updated.');
+                setTrigger(t => t + 1);
+            };
+
+            const sendSMS = name => {
+                alert(`Fee reminder SMS notification sent successfully to parents of ${name}!`);
+            };
+
+            const handleAutoAccrue = () => {
+                const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
+                if (!db.length) {
+                    alert('No student database found. Please go to the "Data" tab and import students first.');
+                    return;
+                }
+                const amt = parseFloat(accrueAmount) || 0;
+                if (amt <= 0) {
+                    alert('Please enter a valid monthly fee amount.');
+                    return;
+                }
+                
+                if (confirm(`Are you sure you want to add ₹${amt.toLocaleString()} monthly fees to ALL ${db.length} registered students?`)) {
+                    const updated = db.map(s => {
+                        const current = parseFloat((s.fees || '0').toString().replace(/,/g, '')) || 0;
+                        return { ...s, fees: (current + amt).toString() };
+                    });
+                    localStorage.setItem('bdms_firebase_mock', JSON.stringify(updated));
+                    
+                    const sessionObj = JSON.parse(localStorage.getItem('bdms_student_session') || 'null');
+                    if (sessionObj) {
+                        const matched = updated.find(s => s.id === sessionObj.id);
+                        if (matched) {
+                            localStorage.setItem('bdms_student_session', JSON.stringify(matched));
+                        }
+                    }
+
+                    alert(`Billing Run Successful!\nAdded ₹${amt.toLocaleString()} tuition fees to all ${db.length} students. Outstanding statistics updated.`);
+                    setTrigger(t => t + 1);
+                }
+            };
+
+            const outstandingTotal = students.reduce((acc, curr) => {
+                const val = parseInt(curr.fees?.replace(/,/g, '') || '0');
+                return acc + val;
+            }, 0);
+
+            return e('div', { className: 'space-y-6 text-white fade-up' }, [
+                e('div', { key: 'fee-stats', className: 'grid grid-cols-1 md:grid-cols-3 gap-6' },
+                    [
+                        { l: 'Outstanding Fees', v: `₹${outstandingTotal.toLocaleString()}`, c: 'text-rose-450', bg: 'bg-rose-500/10' },
+                        { l: 'Collection Target', v: '₹50,000', c: 'text-sky-450', bg: 'bg-sky-500/10' },
+                        { l: 'Collection Efficiency', v: outstandingTotal === 0 ? '100%' : '78.4%', c: 'text-emerald-450', bg: 'bg-emerald-500/10' }
+                    ].map(st => e('div', { key: st.l, className: 'clay-card p-6 border border-slate-800 flex items-center justify-between' },
+                        e('div', null,
+                            e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1' }, st.l),
+                            e('p', { className: `text-2xl font-black ${st.c}` }, st.v)
+                        ),
+                        e('div', { className: `w-12 h-12 rounded-xl ${st.bg} flex items-center justify-center text-slate-350` }, e(Icon, { n: 'banknote', size: 20 }))
+                    ))
+                ),
+                
+                e('div', { key: 'billing-engine', className: 'bg-slate-900/60 p-6 rounded-3xl relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-6 border border-slate-800' }, [
+                    e('div', { className: 'absolute -right-10 -top-10 w-40 h-40 bg-rose-550/10 rounded-full blur-3xl' }),
+                    e('div', { className: 'space-y-1 z-10 max-w-xl text-center md:text-left' }, [
+                        e('div', { className: 'inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-500/30 text-[9px] font-black text-rose-350 tracking-wider mb-2' }, [
+                            e('span', { className: 'w-1.5 h-1.5 bg-rose-450 rounded-full animate-pulse' }),
+                            'MONTHLY BILLING ENGINE'
+                        ]),
+                        e('h3', { className: 'text-lg font-black text-white' }, 'Auto-Accrue Monthly Tuition Fees'),
+                        e('p', { className: 'text-xs text-slate-400 font-medium leading-relaxed' }, 'Accrue regular monthly tuition fees for all registered students at once. Dues will instantly sync to respective Student Portals for online payment.')
+                    ]),
+                    e('div', { className: 'flex items-center gap-3 z-10 shrink-0 bg-slate-950/80 p-3 rounded-2xl border border-slate-800' }, [
+                        e('div', { className: 'flex flex-col' }, [
+                            e('span', { className: 'text-[8px] text-slate-400 font-black uppercase tracking-wider mb-1 pl-1' }, 'Fee Amount (₹)'),
+                            e('input', { 
+                                type: 'number', 
+                                value: accrueAmount, 
+                                onChange: ev => setAccrueAmount(ev.target.value), 
+                                className: 'w-24 p-2.5 rounded-xl bg-slate-900 border-none outline-none text-white text-xs font-black text-center', 
+                                placeholder: '2500' 
+                            })
+                        ]),
+                        e('button', { 
+                            onClick: handleAutoAccrue,
+                            className: 'px-5 py-4 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs uppercase rounded-xl tracking-wider shadow-lg transition-all flex items-center gap-2' 
+                        }, [e(Icon, { n: 'refresh-cw', size: 12 }), 'Accrue Dues'])
+                    ])
+                ]),
+
+                e('div', { key: 'status-card', className: 'clay-card p-6 md:p-8 border border-slate-800' }, [
+                    e('h3', { className: 'text-lg md:text-xl font-black mb-6 flex items-center gap-2' }, [e(Icon, { n: 'credit-card', size: 18, cls: 'text-emerald-450' }), 'Student Fee Status & Online Collection']),
+                    students.length === 0 ? e('div', { className: 'text-center p-8 text-slate-400 font-medium italic bg-slate-900/40 rounded-xl border border-slate-850' }, 'No student database found. Please import student records in the "Data" tab.') : e('div', { className: 'overflow-x-auto' },
+                        e('table', { className: 'w-full text-left border-collapse' }, [
+                            e('thead', { key: 'thead' },
+                                e('tr', { className: 'border-b border-slate-850 text-[10px] font-black text-slate-400 uppercase tracking-wider' },
+                                    ['Student', 'Class', 'Due Amount', 'Status', 'Dept Invoice', 'Actions'].map(th => e('th', { key: th, className: 'pb-4' }, th))
+                                )
+                            ),
+                            e('tbody', { key: 'tbody' },
+                                students.map(s => {
+                                    const deptReceipts = JSON.parse(localStorage.getItem('bdms_departmental_receipts') || '[]');
+                                    const studentReceipt = deptReceipts.find(r => r && r.studentId && r.studentId.toString().toUpperCase() === s.id.toString().toUpperCase());
+
+                                    return e('tr', { key: s.id, className: 'border-b border-slate-900 last:border-0 hover:bg-slate-900/30 transition-colors' }, [
+                                        e('td', { className: 'py-4 flex items-center gap-3' }, [
+                                            e('img', { src: s.photo, className: 'w-8 h-8 rounded-lg object-cover shadow-sm border border-slate-800' }),
+                                            e('div', null, [
+                                                e('p', { className: 'text-xs font-black text-slate-100' }, s.name),
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase mt-0.5' }, s.id)
+                                            ])
+                                        ]),
+                                        e('td', { className: 'py-4 text-xs font-bold text-slate-300' }, s.class),
+                                        e('td', { className: 'py-4 text-xs font-black text-rose-450' }, parseInt(s.fees) > 0 ? `₹${s.fees}` : '₹0 (Paid)'),
+                                        e('td', { className: 'py-4' },
+                                            e('span', { className: `px-2 py-1 text-[9px] font-black rounded-md uppercase ${parseInt(s.fees) > 0 ? 'bg-rose-500/20 text-rose-400' : 'bg-emerald-500/20 text-emerald-400'}` }, 
+                                                parseInt(s.fees) > 0 ? 'Pending' : 'Paid'
+                                            )
+                                        ),
+                                        e('td', { className: 'py-4' },
+                                            studentReceipt ? e('button', { 
+                                                onClick: () => setSelectedReceipt(studentReceipt),
+                                                className: 'px-2.5 py-1 bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black rounded-lg hover:bg-sky-500 hover:text-white transition-all flex items-center gap-1 shadow-sm'
+                                            }, [
+                                                e(Icon, { n: 'file-text', size: 10 }),
+                                                'View Invoice 📋'
+                                            ]) : e('span', { className: 'text-[9px] font-bold text-slate-500 italic' }, 'No Invoice')
+                                        ),
+                                        e('td', { className: 'py-4' },
+                                            parseInt(s.fees) > 0 ? e('div', { className: 'flex gap-2' }, [
+                                                e('button', { onClick: () => markAsPaid(s.id), className: 'px-3 py-1.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[9px] font-black uppercase rounded-lg hover:bg-emerald-550 hover:text-white transition-all flex items-center gap-1' }, [e(Icon, { n: 'check', size: 10 }), 'Mark Paid']),
+                                                e('button', { onClick: () => sendSMS(s.name), className: 'px-3 py-1.5 bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[9px] font-black uppercase rounded-lg hover:bg-sky-550 hover:text-white transition-all flex items-center gap-1' }, [e(Icon, { n: 'bell', size: 10 }), 'Remind'])
+                                            ]) : e('span', { className: 'text-[10px] font-bold text-slate-500' }, 'No Actions')
+                                        )
+                                    ]);
+                                })
+                            )
+                        ])
+                    )
+                ]),
+                selectedReceipt && e(DepartmentalReceiptModal, { key: 'dept-modal', receipt: selectedReceipt, onClose: () => setSelectedReceipt(null) })
+            ]);
+        };
+
+        const initialAdmissionsSeed = [];
+
+        const AdmissionManager = () => {
+            const [admissions, setAdmissions] = useState([]);
+            const [filter, setFilter] = useState('All');
+            const [expandedId, setExpandedId] = useState(null);
+
+            const loadAdmissions = () => {
+                const db = JSON.parse(localStorage.getItem('bdms_admissions_db') || '[]');
+                setAdmissions(db);
+            };
+
+            useEffect(() => {
+                const db = localStorage.getItem('bdms_admissions_db');
+                let parsed = [];
+                if (db) {
+                    parsed = JSON.parse(db).filter(a => a.id !== 'BDMS-AD-202681' && a.id !== 'BDMS-AD-202694');
+                }
+                localStorage.setItem('bdms_admissions_db', JSON.stringify(parsed));
+                setAdmissions(parsed);
+                window.addEventListener('bdms_admissions_updated', loadAdmissions);
+
+                const handleStorageChange = (e) => {
+                    if (e.key === 'bdms_admissions_db') {
+                        loadAdmissions();
+                    }
+                };
+                window.addEventListener('storage', handleStorageChange);
+
+                return () => {
+                    window.removeEventListener('bdms_admissions_updated', loadAdmissions);
+                    window.removeEventListener('storage', handleStorageChange);
+                };
+            }, []);
+
+            const updateStatus = (id, newStatus) => {
+                const updated = admissions.map(a => a.id === id ? { ...a, status: newStatus } : a);
+                localStorage.setItem('bdms_admissions_db', JSON.stringify(updated));
+                setAdmissions(updated);
+                alert(`Application status successfully updated to "${newStatus}"!`);
+            };
+
+            const deleteAdmission = (id) => {
+                if (confirm('Are you sure you want to permanently delete this admission record?')) {
+                    const updated = admissions.filter(a => a.id !== id);
+                    localStorage.setItem('bdms_admissions_db', JSON.stringify(updated));
+                    setAdmissions(updated);
+                    alert('Record deleted successfully.');
+                }
+            };
+
+            const filteredAdmissions = admissions.filter(a => {
+                if (filter === 'All') return true;
+                return a.status === filter;
+            });
+
+            const total = admissions.length;
+            const pending = admissions.filter(a => a.status === 'Pending Verification').length;
+            const approved = admissions.filter(a => a.status === 'Approved').length;
+            const rejected = admissions.filter(a => a.status === 'Rejected').length;
+
+            return e('div', { className: 'clay-card p-6 md:p-8 border border-slate-800 text-white fade-up' }, [
+                e('div', { className: 'flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8' }, [
+                    e('div', null, [
+                        e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2 text-slate-100' }, [
+                            e(Icon, { n: 'graduation-cap', size: 18, cls: 'text-sky-400' }), 
+                            'Admission Manager 2026-27'
+                        ]),
+                        e('p', { className: 'text-slate-400 text-xs font-bold uppercase mt-1 tracking-widest' }, 'Review & Verify Digital Application Submissions')
+                    ]),
+                    e('div', { className: 'flex gap-1.5 overflow-x-auto pb-2 md:pb-0' }, 
+                        ['All', 'Pending Verification', 'Approved', 'Rejected'].map(statusType => {
+                            const labelMap = {
+                                'All': `All (${total})`,
+                                'Pending Verification': `Pending (${pending})`,
+                                'Approved': `Approved (${approved})`,
+                                'Rejected': `Rejected (${rejected})`
+                            };
+                            return e('button', {
+                                key: statusType,
+                                onClick: () => setFilter(statusType),
+                                className: `px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${filter === statusType ? 'bg-sky-500 text-white shadow-md' : 'bg-slate-900 text-slate-450 hover:bg-slate-800'}`
+                            }, labelMap[statusType]);
+                        })
+                    )
+                ]),
+
+                filteredAdmissions.length === 0 ? e('div', { className: 'text-center py-16 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800' }, [
+                    e('div', { className: 'w-12 h-12 bg-slate-800 text-slate-550 rounded-full flex items-center justify-center mx-auto mb-4' }, e(Icon, { n: 'inbox', size: 20 })),
+                    e('h4', { className: 'text-sm font-black text-slate-350' }, 'No Admissions Found'),
+                    e('p', { className: 'text-xs text-slate-500 font-medium mt-1' }, `There are no records in "${filter}" category at this moment.`)
+                ]) : e('div', { className: 'space-y-4' }, 
+                    filteredAdmissions.map(a => {
+                        const isExpanded = expandedId === a.id;
+                        const statusColors = 
+                            a.status === 'Approved' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                            a.status === 'Rejected' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                            'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+
+                        return e('div', { 
+                            key: a.id, 
+                            className: `border rounded-2xl bg-slate-900/20 transition-all overflow-hidden ${isExpanded ? 'border-sky-500/40 shadow-lg' : 'border-slate-850 hover:border-slate-800'}` 
+                        }, [
+                            e('div', { 
+                                onClick: () => setExpandedId(isExpanded ? null : a.id),
+                                className: 'p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-slate-900/30 transition-colors select-none' 
+                            }, [
+                                e('div', { className: 'flex items-center gap-4' }, [
+                                    e('div', { className: 'w-10 h-10 bg-sky-500/10 text-sky-400 rounded-xl flex items-center justify-center' }, e(Icon, { n: 'file-text', size: 18 })),
+                                    e('div', null, [
+                                        e('div', { className: 'flex items-center gap-2' }, [
+                                            e('h4', { className: 'text-sm font-black text-slate-205' }, `${a.student.firstName} ${a.student.lastName}`),
+                                            e('span', { className: 'px-2 py-0.5 bg-slate-800 text-slate-400 text-[8px] font-black rounded uppercase' }, a.student.grade)
+                                        ]),
+                                        e('p', { className: 'text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider' }, `${a.id} · Submitted ${a.submittedAt}`)
+                                    ])
+                                ]),
+                                e('div', { className: 'flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end' }, [
+                                    e('span', { className: `px-3 py-1 rounded-full text-[9px] font-black uppercase ${statusColors}` }, a.status),
+                                    e('div', { className: `w-7 h-7 rounded-lg flex items-center justify-center bg-slate-800 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}` }, 
+                                        e(Icon, { n: 'chevron-down', size: 14 })
+                                    )
+                                ])
+                            ]),
+
+                            isExpanded && e('div', { className: 'px-6 pb-6 pt-2 border-t border-slate-850 bg-slate-950/20 space-y-6' }, [
+                                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' }, [
+                                    e('div', { className: 'bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-sm space-y-3.5' }, [
+                                        e('h5', { className: 'text-xs font-black text-sky-400 uppercase tracking-widest border-b border-slate-850 pb-2' }, 'Student Details'),
+                                        e('div', { className: 'grid grid-cols-2 gap-3 text-xs text-slate-300' }, [
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Date of Birth'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.student.dob)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Gender'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.student.gender)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Prev School'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5 truncate' }, a.student.prevSchool || 'N/A')
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Academic Year'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.student.academicYear || '2026-2027')
+                                            ])
+                                        ]),
+                                        a.student.about && e('div', { className: 'bg-slate-950/60 p-3 rounded-xl border border-slate-850' }, [
+                                            e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Special Remarks / Bio'),
+                                            e('p', { className: 'text-xs font-semibold text-slate-400 mt-1 leading-normal' }, a.student.about)
+                                        ])
+                                    ]),
+
+                                    e('div', { className: 'bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-sm space-y-3.5' }, [
+                                        e('h5', { className: 'text-xs font-black text-sky-400 uppercase tracking-widest border-b border-slate-855 pb-2' }, 'Parent/Guardian details'),
+                                        e('div', { className: 'grid grid-cols-2 gap-3 text-xs text-slate-300' }, [
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Guardian Name'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.parent.parentName)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Relationship'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.parent.relationship)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Mobile Phone'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.parent.phone)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Occupation'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5' }, a.parent.occupation || 'N/A')
+                                            ]),
+                                            e('div', { className: 'col-span-2' }, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Email Address'),
+                                                e('p', { className: 'font-extrabold text-slate-200 mt-0.5 truncate' }, a.parent.email)
+                                            ]),
+                                            e('div', { className: 'col-span-2' }, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase' }, 'Residential Address'),
+                                                e('p', { className: 'font-extrabold text-slate-350 mt-0.5 leading-normal' }, a.parent.address)
+                                            ])
+                                        ])
+                                    ])
+                                ]),
+
+                                e('div', { className: 'bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-sm space-y-4' }, [
+                                    e('h5', { className: 'text-xs font-black text-sky-400 uppercase tracking-widest border-b border-slate-855 pb-2' }, 'Document Verification Checklist'),
+                                    e('div', { className: 'grid grid-cols-1 sm:grid-cols-3 gap-4' }, 
+                                        ['studentPhoto', 'birthCert', 'parentID'].map(docKey => {
+                                            const docLabel = 
+                                                docKey === 'studentPhoto' ? 'Passport Size Photo' :
+                                                docKey === 'birthCert' ? 'Student Aadhaar Card' : 'Guardian Aadhaar/PAN';
+                                            const docData = a.docs[docKey];
+                                            const isClickable = !!docData?.data;
+                                            return e(isClickable ? 'button' : 'div', { 
+                                                key: docKey, 
+                                                onClick: isClickable ? () => openBase64Document(docData.data, docData.name) : undefined,
+                                                className: `flex items-center gap-3 p-3.5 border rounded-xl text-left w-full transition-all active:scale-[0.98] ${docData ? 'border-green-900/40 bg-green-500/5 text-green-400 hover:bg-green-500/10 hover:border-green-800/40 cursor-pointer' : 'border-slate-800 bg-slate-950/40 text-slate-500'}` 
+                                            }, [
+                                                e(Icon, { n: docData ? 'check-circle' : 'alert-circle', size: 16 }),
+                                                e('div', { className: 'overflow-hidden flex-1' }, [
+                                                    e('p', { className: 'text-[10px] font-extrabold uppercase flex items-center gap-1.5' }, [
+                                                        docLabel,
+                                                        isClickable && e(Icon, { n: 'external-link', size: 8 })
+                                                    ]),
+                                                    e('p', { className: 'text-[9px] font-semibold truncate mt-0.5 text-slate-300' }, docData ? docData.name : 'Missing')
+                                                ])
+                                            ]);
+                                        })
+                                    )
+                                ]),
+
+                                e('div', { className: 'bg-slate-900/60 p-5 rounded-2xl border border-slate-800 shadow-sm space-y-4' }, [
+                                    e('h5', { className: 'text-xs font-black text-sky-400 uppercase tracking-widest border-b border-slate-850 pb-2 flex justify-between items-center' }, [
+                                        'Officer Live Desk Chat',
+                                        e('span', { className: 'px-2 py-0.5 bg-sky-500/20 text-sky-400 text-[8px] font-black rounded uppercase' }, 'Secure Desk')
+                                    ]),
+                                    e('div', { className: 'grid grid-cols-1 md:grid-cols-12 gap-6' }, [
+                                        e('div', { className: 'md:col-span-8 flex flex-col h-[280px] border border-slate-800 rounded-xl overflow-hidden' }, [
+                                            e('div', { className: 'flex-1 p-3 bg-slate-950/40 overflow-y-auto space-y-3' }, 
+                                                (a.chat || []).map((m, idx) => {
+                                                    const isUser = m.sender === 'user';
+                                                    return e('div', { 
+                                                        key: idx, 
+                                                        className: `flex flex-col ${isUser ? 'items-start' : 'items-end'}` 
+                                                    }, [
+                                                        e('div', { 
+                                                            className: `max-w-xs p-2.5 rounded-xl text-xs font-semibold leading-relaxed shadow-sm ${
+                                                                isUser ? 'bg-slate-800 text-slate-200 border border-slate-750 rounded-tl-none' : 'bg-sky-500 text-white rounded-tr-none'
+                                                            }` 
+                                                        }, m.text),
+                                                        e('span', { className: 'text-[8px] text-slate-500 font-bold uppercase mt-1 px-1' }, `${isUser ? 'Applicant' : 'Admin'} · ${m.timestamp}`)
+                                                    ]);
+                                                })
+                                            ),
+                                            e('form', { 
+                                                onSubmit: (ev) => {
+                                                    ev.preventDefault();
+                                                    const inputEl = ev.target.elements.adminMsg;
+                                                    const val = inputEl.value.trim();
+                                                    if (!val) return;
+                                                    
+                                                    const msgObj = {
+                                                        sender: 'admin',
+                                                        text: val,
+                                                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                    };
+                                                    const db = JSON.parse(localStorage.getItem('bdms_admissions_db') || '[]');
+                                                    const updated = db.map(x => x.id === a.id ? { ...x, chat: [...(x.chat || []), msgObj] } : x);
+                                                    localStorage.setItem('bdms_admissions_db', JSON.stringify(updated));
+                                                    inputEl.value = '';
+                                                    loadAdmissions();
+                                                    window.dispatchEvent(new Event('bdms_admissions_updated'));
+                                                },
+                                                className: 'p-2 bg-slate-950/90 border-t border-slate-800 flex gap-2' 
+                                            }, [
+                                                e('input', {
+                                                    name: 'adminMsg',
+                                                    type: 'text',
+                                                    placeholder: 'Type response to applicant...',
+                                                    className: 'flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-850 text-xs font-semibold text-white focus:outline-none focus:ring-1 focus:ring-sky-500'
+                                                }),
+                                                e('button', {
+                                                    type: 'submit',
+                                                    className: 'px-3 bg-sky-500 text-white rounded-lg font-bold text-xs hover:bg-sky-600 transition-all flex items-center justify-center active:scale-95'
+                                                }, e(Icon, { n: 'send', size: 12 }))
+                                            ])
+                                        ]),
+                                        e('div', { className: 'md:col-span-4 bg-slate-950/20 p-4 rounded-xl border border-slate-850 space-y-2.5 flex flex-col justify-center' }, [
+                                            e('p', { className: 'text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1' }, 'Quick Responses'),
+                                            [
+                                                { label: 'Request clear photo scan', text: 'Dear parent, the uploaded student photo is slightly blurry. Please reply here and send a clearer passport-size scan.' },
+                                                { label: 'Ask for Aadhaar card scan', text: 'Dear parent, we require a scan copy of the student Aadhaar Card. Please upload a clear PDF/image scan to finalize approval.' },
+                                                { label: 'Confirm verification clear', text: 'All submitted documents have cleared verification. Your application status has been updated to Approved!' }
+                                            ].map((qr, qIdx) => e('button', {
+                                                key: qIdx,
+                                                onClick: () => {
+                                                    const msgObj = {
+                                                        sender: 'admin',
+                                                        text: qr.text,
+                                                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                                    };
+                                                    const db = JSON.parse(localStorage.getItem('bdms_admissions_db') || '[]');
+                                                    const updated = db.map(x => x.id === a.id ? { ...x, chat: [...(x.chat || []), msgObj] } : x);
+                                                    localStorage.setItem('bdms_admissions_db', JSON.stringify(updated));
+                                                    loadAdmissions();
+                                                    window.dispatchEvent(new Event('bdms_admissions_updated'));
+                                                },
+                                                className: 'text-left p-2.5 bg-slate-900 hover:bg-sky-500/10 text-slate-350 hover:text-sky-400 rounded-lg border border-slate-850 text-[10px] font-bold leading-normal transition-all'
+                                            }, qr.label))
+                                        ])
+                                    ])
+                                ]),
+
+                                e('div', { className: 'flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-850 pt-5' }, [
+                                    e('button', { 
+                                        onClick: () => deleteAdmission(a.id),
+                                        className: 'w-full sm:w-auto px-4 py-2.5 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-650 hover:text-white text-xs font-black transition-all border border-red-500/20 active:scale-95 flex items-center justify-center gap-2 cursor-pointer'
+                                    }, [e(Icon, { n: 'trash-2', size: 14 }), 'Delete Record ✦']),
+
+                                    e('div', { className: 'flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto' }, [
+                                        e('button', {
+                                            onClick: () => downloadAdmissionSlip(a.student, a.parent, a.docs || null),
+                                            className: 'px-4 py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:bg-slate-750 text-xs font-black transition-all border border-slate-700 active:scale-95 flex items-center justify-center gap-2 cursor-pointer'
+                                        }, [e(Icon, { n: 'download', size: 14 }), 'Print Slip ✦']),
+
+                                        a.status !== 'Approved' && e('button', { 
+                                            onClick: () => updateStatus(a.id, 'Approved'),
+                                            className: 'px-4 py-2.5 rounded-xl bg-emerald-555 bg-emerald-600 text-white hover:bg-emerald-500 text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer'
+                                        }, [e(Icon, { n: 'check', size: 14 }), 'Approve Application ✦']),
+
+                                        a.status !== 'Rejected' && e('button', { 
+                                            onClick: () => updateStatus(a.id, 'Rejected'),
+                                            className: 'px-4 py-2.5 rounded-xl bg-red-600 text-white hover:bg-red-500 text-xs font-black transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer'
+                                        }, [e(Icon, { n: 'x', size: 14 }), 'Reject Application ✦'])
+                                    ])
+                                ])
+                            ])
+                        ]);
+                    })
+                )
+            ]);
+        };
+
+        const NoticePublisher = () => {
+            const [nt, setNt] = useState('');
+            const [nd, setNd] = useState('');
+            const [img, setImg] = useState('');
+
+            const handleFileChange = (e_file) => {
+                const file = e_file.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setImg(reader.result);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            };
+
+            const addNotice = (ev) => {
+                ev.preventDefault();
+                const saved = JSON.parse(localStorage.getItem('bdms_notices') || '[]');
+                const next = [{ 
+                    id: Date.now(), 
+                    t: nt, 
+                    d: nd, 
+                    img: img,
+                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                }, ...saved];
+                localStorage.setItem('bdms_notices', JSON.stringify(next));
+                setNt(''); setNd(''); setImg('');
+                alert('Notice Published Successfully!');
+            };
+
+            return e('form', { onSubmit: addNotice, className: 'space-y-4' },
+                e('div', null,
+                    e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Title'),
+                    e('input', { type: 'text', value: nt, onChange: x => setNt(x.target.value), className: 'w-full p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-white font-bold text-xs', placeholder: 'e.g., Summer Holidays 2026', required: true })
+                ),
+                e('div', null,
+                    e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Content'),
+                    e('textarea', { value: nd, onChange: x => setNd(x.target.value), className: 'w-full p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-white font-medium h-32 text-xs', placeholder: 'Describe the announcement in detail...', required: true })
+                ),
+                e('div', null,
+                    e('label', { className: 'text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2' }, 'Notice Image (Optional)'),
+                    e('div', { className: 'flex flex-col md:flex-row items-center gap-4 p-4 bg-slate-900/40 rounded-xl border border-dashed border-slate-800' }, [
+                        e('input', { 
+                            type: 'file', 
+                            accept: 'image/*', 
+                            onChange: handleFileChange, 
+                            className: 'text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-sky-500/20 file:text-sky-400 hover:file:bg-sky-500/35 cursor-pointer w-full md:w-auto' 
+                        }),
+                        img && e('div', { className: 'relative w-24 h-16 rounded-lg overflow-hidden border border-slate-800 shadow-sm shrink-0' }, [
+                            e('img', { src: img, className: 'w-full h-full object-cover' }),
+                            e('button', { 
+                                type: 'button', 
+                                onClick: () => setImg(''), 
+                                className: 'absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors shadow' 
+                            }, e(Icon, { n: 'x', size: 10 }))
+                        ])
+                    ])
+                ),
+                e('button', { type: 'submit', className: 'w-full bg-slate-100 text-slate-950 p-4 rounded-xl font-black transition-all hover:bg-sky-400 hover:text-white text-xs' }, 'Publish Announcement')
+            );
+        };
+
+        const NoticeList = () => {
+            const [notices, setNotices] = useState([]);
+            useEffect(() => {
+                const saved = JSON.parse(localStorage.getItem('bdms_notices') || '[]');
+                setNotices(saved);
+            }, []);
+            if (!notices.length) return e('p', { className: 'text-slate-500 font-medium italic' }, 'No active notices found. Post your first one!');
+            return e('div', { className: 'space-y-4' }, notices.map(n => e('div', { key: n.id, className: 'clay-card p-6 flex justify-between items-center border border-slate-850' }, [
+                e('div', { className: 'flex items-center gap-4' }, [
+                    n.img && e('img', { src: n.img, className: 'w-12 h-10 rounded object-cover border border-slate-800 shadow-sm' }),
+                    e('div', null, e('p', { className: 'text-[10px] font-bold text-sky-400' }, n.date), e('p', { className: 'font-bold text-slate-200 text-xs md:text-sm' }, n.t))
+                ]),
+                e('button', { onClick: () => { const next = notices.filter(x => x.id !== n.id); localStorage.setItem('bdms_notices', JSON.stringify(next)); setNotices(next); }, className: 'p-3 bg-rose-500/10 text-rose-450 rounded-xl hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20' }, e(Icon, { n: 'trash-2', size: 18 }))
+            ])));
+        };
+
+        const DepartmentPortal = () => {
+            const [email, setEmail] = useState('');
+            const [otp, setOtp] = useState('');
+            const [step, setStep] = useState('authorized');
+            const [activeTab, setActiveTab] = useState('Admin');
+            const [loading, setLoading] = useState(false);
+            const [admissionsCount, setAdmissionsCount] = useState(0);
+
+            const logout = () => {
+                window.location.href = '/';
+            };
+
+            useEffect(() => {
+                const db = JSON.parse(localStorage.getItem('bdms_admissions_db') || '[]');
+                setAdmissionsCount(db.length);
+                const handleUpdate = () => {
+                    const latestDb = JSON.parse(localStorage.getItem('bdms_admissions_db') || '[]');
+                    setAdmissionsCount(latestDb.length);
+                };
+                window.addEventListener('bdms_admissions_updated', handleUpdate);
+
+                const handleStorageChange = (e) => {
+                    if (e.key === 'bdms_admissions_db') {
+                        handleUpdate();
+                    }
+                };
+                window.addEventListener('storage', handleStorageChange);
+
+                return () => {
+                    window.removeEventListener('bdms_admissions_updated', handleUpdate);
+                    window.removeEventListener('storage', handleStorageChange);
+                };
+            }, []);
+
+            const handleSendOTP = (ev) => {
+                ev.preventDefault();
+                if (!email.includes('@')) return alert('Please enter a valid email');
+                setLoading(true);
+                setTimeout(() => {
+                    setLoading(false);
+                    setStep('otp');
+                }, 1200);
+            };
+
+            const handleVerify = (ev) => {
+                ev.preventDefault();
+                if (otp === '123456') {
+                    localStorage.setItem('bdms_staff_session', 'authorized');
+                    setStep('authorized');
+                } else {
+                    alert('Invalid OTP. Use demo code: 123456');
+                }
+            };
+
+            if (step === 'email') {
+                return e('div', { key: 'email-view', className: 'pt-20 pb-6 px-4 md:pt-40 md:pb-20 md:px-6 min-h-[80vh] flex items-center justify-center' },
+                    e('div', { className: 'clay-card max-w-md w-full p-6 md:p-12 text-center border border-slate-800' },
+                        e('div', { className: 'w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl border border-slate-800' }, e(Icon, { n: 'mail', size: 28, cls: 'text-sky-400' })),
+                        e('h2', { className: 'text-xl md:text-2xl font-black mb-1 md:mb-2 text-white' }, 'Staff Authentication'),
+                        e('p', { className: 'text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-6 md:mb-8' }, 'Enter school email to receive OTP'),
+                        e('form', { onSubmit: handleSendOTP },
+                            e('input', { 
+                                type: 'email', 
+                                className: 'w-full p-4 rounded-xl bg-slate-950 text-white border border-slate-800 mb-6 text-center font-bold', 
+                                placeholder: 'staff@bdmodern.com',
+                                value: email,
+                                onChange: e_input => setEmail(e_input.target.value),
+                                required: true
+                            }),
+                            e('button', { 
+                                type: 'submit',
+                                className: 'w-full bg-sky-500 hover:bg-sky-600 text-white p-4 rounded-xl font-bold transition-all hover:scale-102 flex items-center justify-center gap-2' 
+                            }, loading ? 'Sending OTP...' : e('span', { className: 'flex items-center gap-2 font-black text-xs uppercase' }, e(Icon, { n: 'send', size: 16 }), 'Send Verification Code'))
+                        )
+                    )
+                );
+            }
+
+            if (step === 'otp') {
+                return e('div', { key: 'otp-view', className: 'pt-20 pb-6 px-4 md:pt-40 md:pb-20 md:px-6 min-h-[80vh] flex items-center justify-center' },
+                    e('div', { className: 'clay-card max-w-md w-full p-6 md:p-12 text-center border border-slate-800' },
+                        e('div', { className: 'w-16 h-16 md:w-20 md:h-20 bg-sky-500/20 text-sky-400 rounded-2xl md:rounded-[2rem] flex items-center justify-center mx-auto mb-6 md:mb-8 shadow-xl border border-sky-500/30' }, e(Icon, { n: 'lock', size: 28 })),
+                        e('h2', { className: 'text-xl md:text-2xl font-black mb-1 md:mb-2 text-white' }, 'Verify OTP'),
+                        e('p', { className: 'text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1' }, 'Code sent to'),
+                        e('p', { className: 'text-sky-400 text-xs md:text-sm font-bold mb-6' }, email),
+                        e('form', { onSubmit: handleVerify },
+                            e('input', { 
+                                type: 'text', 
+                                maxLength: 6,
+                                className: 'w-full p-4 rounded-xl bg-slate-950 text-white border border-slate-800 mb-6 text-center font-black text-2xl tracking-[0.5em] focus:outline-none focus:border-sky-500', 
+                                placeholder: '000000',
+                                value: otp,
+                                onChange: e_input => setOtp(e_input.target.value),
+                                required: true
+                            }),
+                            e('button', { 
+                                type: 'submit',
+                                className: 'w-full bg-sky-500 hover:bg-sky-600 text-white p-4 rounded-xl font-black text-xs uppercase transition-all hover:scale-102' 
+                            }, 'Verify & Login'),
+                            e('button', { 
+                                type: 'button',
+                                onClick: () => setStep('email'),
+                                className: 'mt-6 text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-slate-400 block mx-auto' 
+                            }, 'Change Email')
+                        )
+                    )
+                );
+            }
+
+            return e('div', { key: 'auth-view', className: 'pt-10 pb-6 px-4 md:pt-16 md:pb-20 md:px-6' },
+                e('div', { className: 'max-w-7xl mx-auto' },
+                    e('div', { className: 'flex justify-between items-center mb-6 md:mb-12' },
+                        e('div', null,
+                            e('h1', { className: 'text-2xl md:text-3xl font-black tracking-tight text-white flex items-center gap-3' }, [
+                                e('img', { src: '../logo.png', className: 'w-8 h-8 md:w-10 md:h-10 object-contain' }),
+                                e('span', null, ['BDMS Staff Desk ', e('span', { className: 'text-sky-500' }, '✦ Office')])
+                            ]),
+                            e('p', { className: 'text-sky-400 text-[9px] md:text-xs font-bold uppercase tracking-widest mt-1 hidden md:block' }, `Authorized Central Terminal Console`)
+                        ),
+                        e('button', { onClick: logout, className: 'Btn shadow-sm' }, [
+                            e('div', { className: 'sign' }, e(Icon, { n: 'log-out', size: 14, cls: 'text-white' })),
+                            e('div', { className: 'text' }, 'Logout')
+                        ])
+                    ),
+                    e('div', { className: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6 mb-6 md:mb-16' },
+                        [
+                            { l: 'Admin', v: '12 Active', i: 'user-plus', c: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
+                            { l: 'Staff', v: '45 Faculty', i: 'users', c: 'bg-purple-500/20 text-purple-400 border border-purple-500/30' },
+                            { l: 'Fees', v: 'Manage Accounts', i: 'banknote', c: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
+                            { l: 'Data', v: 'Sync DB', i: 'file-text', c: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
+                            { l: 'Admissions', v: `${admissionsCount} Records`, i: 'graduation-cap', c: 'bg-sky-500/20 text-sky-400 border border-sky-500/30' }
+                        ].map(s => e('div', { 
+                            key: s.l, 
+                            onClick: () => setActiveTab(s.l),
+                            className: `clay-card p-4 md:p-6 rounded-2xl shadow-sm cursor-pointer transition-all duration-300 hover:scale-105 ${activeTab === s.l ? 'ring-2 ring-sky-500 border-sky-550' : 'border-slate-800'}` 
+                        },
+                            e('div', { className: `w-8 h-8 md:w-10 md:h-10 ${s.c} rounded-lg md:rounded-xl flex items-center justify-center mb-2 md:mb-4` }, e(Icon, { n: s.i, size: 16 })),
+                            e('p', { className: 'text-[7px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5 md:mb-1' }, s.l),
+                            e('p', { className: 'text-xs md:text-sm font-black text-slate-200 leading-none' }, s.v)
+                        ))
+                    ),
+                    
+                    e('div', { className: 'mb-12' },
+                        activeTab === 'Admin' && e(AdminSessionManager),
+                        activeTab === 'Data' && e(StudentDatabaseManager),
+                        activeTab === 'Staff' && e(StaffManager),
+                        activeTab === 'Fees' && e(FeeManager),
+                        activeTab === 'Admissions' && e(AdmissionManager)
+                    ),
+
+                    e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 border-t border-slate-800 pt-12' },
+                        e('div', null,
+                            e('h3', { className: 'text-lg md:text-xl font-black mb-4 md:mb-6 flex items-center gap-2 text-slate-100' }, [e(Icon, { n: 'megaphone', size: 18, cls: 'text-sky-400' }), 'Post Notice']),
+                            e('div', { className: 'clay-card p-5 md:p-8 rounded-2xl border border-slate-800 mb-6' }, e(NoticePublisher))
+                        ),
+                        e('div', null,
+                            e('h3', { className: 'text-lg md:text-xl font-black mb-4 md:mb-6 flex items-center gap-2 text-slate-100' }, [e(Icon, { n: 'list', size: 18, cls: 'text-sky-400' }), 'Notices']),
+                            e(NoticeList)
+                        )
+                    )
+                )
+            );
+        };
+
+        // Cleanup bloated legacy data URLs to prevent QuotaExceededError
+        try {
+            const rawDb = localStorage.getItem('bdms_admissions_db');
+            if (rawDb) {
+                const db = JSON.parse(rawDb);
+                let migrated = false;
+                const cleaned = db.map(adm => {
+                    let recordMigrated = false;
+                    const cleanDocs = { ...adm.docs };
+                    if (cleanDocs.birthCert && cleanDocs.birthCert.data && cleanDocs.birthCert.data.length > 2000000) {
+                        cleanDocs.birthCert = { ...cleanDocs.birthCert, data: '' };
+                        recordMigrated = true;
+                    }
+                    if (cleanDocs.parentID && cleanDocs.parentID.data && cleanDocs.parentID.data.length > 2000000) {
+                        cleanDocs.parentID = { ...cleanDocs.parentID, data: '' };
+                        recordMigrated = true;
+                    }
+                    if (cleanDocs.studentPhoto && cleanDocs.studentPhoto.data && cleanDocs.studentPhoto.data.length > 2000000) {
+                        cleanDocs.studentPhoto = { ...cleanDocs.studentPhoto, data: '' };
+                        recordMigrated = true;
+                    }
+                    if (recordMigrated) migrated = true;
+                    return { ...adm, docs: cleanDocs };
+                });
+                if (migrated) {
+                    localStorage.setItem('bdms_admissions_db', JSON.stringify(cleaned));
+                    console.log('Sanitized local admissions database: cleared heavy file uploads.');
+                }
+            }
+        } catch (e) {
+            console.error('Failed to run admissions database migration:', e);
+        }
+        ReactDOM.createRoot(document.getElementById('root')).render(e(DepartmentPortal));
+    </script>
+</body>
+</html>
