@@ -349,6 +349,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCUuUCykR9GUsfC7-MiMyHqoO2OTzoax8s",
@@ -362,15 +363,20 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         // Expose to window so our existing React code can access them
         window.firebaseDB = db;
+        window.firebaseStorage = storage;
+        window.fs_ref = ref;
+        window.fs_uploadBytes = uploadBytes;
+        window.fs_getDownloadURL = getDownloadURL;
         window.fs_collection = collection;
         window.fs_getDocs = getDocs;
         window.fs_setDoc = setDoc;
         window.fs_doc = doc;
         window.fs_onSnapshot = onSnapshot;
-        console.log("Firebase initialized securely.");
+        console.log("Firebase initialized securely with Storage.");
     </script>
 
     <script>
@@ -1146,10 +1152,13 @@
             const [students, setStudents] = useState([]);
             const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
             
-            const defaultGrid = Array(5).fill(null).map(() => ({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' }));
+            const FEE_ADDRESSES = ['Amruha', 'B. Moap / C. Moap', 'B. Sik (Kala)', 'Bagar', 'Bagar Tola', 'Bahuara', 'Bangauti', 'Basra', 'Berai', 'Bhikhampur', 'Bhisampura', 'Bihita', 'Birbal Tola', 'Bishambarpura', 'C. Sik (Khurd)', 'Chouri', 'Daridih', 'Darna', 'Dhanchua', 'Dhokaraha', 'Fatehpur', 'Imadpur', 'Itour', 'Janakpuria', 'Khutaha', 'Kodiar', 'Kolodihari', 'Kosiar', 'Kurmuri', 'Lachidih', 'Mahavirganj', 'Manaini', 'Mansagar', 'Milki Tola', 'Mopti', 'Nonadih', 'Panmari Mathiya', 'Panwari', 'Purahara', 'Rajpur', 'Ratani Tola', 'Sahiyara', 'Sawana', 'Sik Tola', 'Vishnupura'];
+            const CLASSES = ['Nursery', 'LKG', 'UKG', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade', '6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade'];
+            
+            const defaultGrid = Array(5).fill(null).map(() => ({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '', uploadingPhoto: false }));
             const [gridData, setGridData] = useState(defaultGrid);
             const gridCols = ['id', 'name', 'fname', 'dob', 'address', 'class', 'photo'];
-            const gridHeaders = ['ID', 'Name', "Father's Name", 'DOB', 'Address', 'Class', 'Photo URL'];
+            const gridHeaders = ['ID', 'Name', "Father's Name", 'DOB', 'Address', 'Class', 'Photo'];
 
             useEffect(() => {
                 if (!window.firebaseDB) return;
@@ -1253,10 +1262,41 @@
             const handleGridChange = (rIdx, cKey, val) => {
                 const newData = [...gridData];
                 newData[rIdx][cKey] = val;
-                if (rIdx === newData.length - 1 && val.trim() !== '') {
-                    newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' });
+                if (rIdx === newData.length - 1 && (val || '').trim() !== '') {
+                    newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '', uploadingPhoto: false });
                 }
                 setGridData(newData);
+            };
+
+            const handlePhotoUpload = async (e, rIdx) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                if(!window.firebaseStorage) return alert("Firebase Storage not initialized.");
+
+                const newData = [...gridData];
+                newData[rIdx].uploadingPhoto = true;
+                setGridData(newData);
+
+                try {
+                    const fileRef = window.fs_ref(window.firebaseStorage, `students/photos/${Date.now()}_${file.name}`);
+                    await window.fs_uploadBytes(fileRef, file);
+                    const downloadURL = await window.fs_getDownloadURL(fileRef);
+                    
+                    const updatedData = [...gridData];
+                    updatedData[rIdx].photo = downloadURL;
+                    updatedData[rIdx].uploadingPhoto = false;
+                    
+                    if (rIdx === updatedData.length - 1) {
+                        updatedData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '', uploadingPhoto: false });
+                    }
+                    setGridData(updatedData);
+                } catch (error) {
+                    console.error("Photo upload failed:", error);
+                    alert("Failed to upload photo: " + error.message);
+                    const rollbackData = [...gridData];
+                    rollbackData[rIdx].uploadingPhoto = false;
+                    setGridData(rollbackData);
+                }
             };
 
             const handleGridPaste = (e, rIdx, cIdx) => {
@@ -1270,7 +1310,7 @@
                 rows.forEach((rowVals, rOffset) => {
                     const targetRow = rIdx + rOffset;
                     if (targetRow >= newData.length) {
-                         newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' });
+                         newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '', uploadingPhoto: false });
                     }
                     rowVals.forEach((val, cOffset) => {
                         const targetCol = cIdx + cOffset;
@@ -1341,16 +1381,61 @@
                                 ),
                                 e('tbody', null,
                                     gridData.map((row, rIdx) => e('tr', { key: rIdx, className: 'hover:bg-slate-800/30 transition-colors' },
-                                        gridCols.map((cKey, cIdx) => e('td', { key: cKey, className: 'border-b border-r border-slate-800 p-0' },
-                                            e('input', {
-                                                type: 'text',
-                                                value: row[cKey],
-                                                onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
-                                                onPaste: (e) => handleGridPaste(e, rIdx, cIdx),
-                                                placeholder: rIdx === 0 ? `e.g. ${cKey}` : '',
-                                                className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[140px] placeholder:text-slate-600'
-                                            })
-                                        ))
+                                        gridCols.map((cKey, cIdx) => {
+                                            let cellInput;
+                                            if (cKey === 'address') {
+                                                cellInput = e('select', {
+                                                    value: row[cKey],
+                                                    onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
+                                                    className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[140px] appearance-none cursor-pointer'
+                                                }, 
+                                                    e('option', { value: '', className: 'bg-slate-800 text-slate-400' }, 'Select...'),
+                                                    FEE_ADDRESSES.map(addr => e('option', { key: addr, value: addr, className: 'bg-slate-800 text-slate-200' }, addr))
+                                                );
+                                            } else if (cKey === 'class') {
+                                                cellInput = e('select', {
+                                                    value: row[cKey],
+                                                    onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
+                                                    className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[120px] appearance-none cursor-pointer'
+                                                }, 
+                                                    e('option', { value: '', className: 'bg-slate-800 text-slate-400' }, 'Select...'),
+                                                    CLASSES.map(cls => e('option', { key: cls, value: cls, className: 'bg-slate-800 text-slate-200' }, cls))
+                                                );
+                                            } else if (cKey === 'dob') {
+                                                cellInput = e('input', {
+                                                    type: 'date',
+                                                    value: row[cKey],
+                                                    onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
+                                                    className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[140px] [color-scheme:dark] cursor-pointer'
+                                                });
+                                            } else if (cKey === 'photo') {
+                                                cellInput = row.uploadingPhoto ? 
+                                                    e('div', { className: 'p-3 flex items-center justify-center gap-2 text-sky-400 min-w-[140px]' },
+                                                        e('div', { className: 'w-3 h-3 border-2 border-sky-400 border-t-transparent rounded-full animate-spin' }),
+                                                        e('span', { className: 'text-[10px] font-bold uppercase' }, 'Uploading...')
+                                                    ) : row[cKey] ? 
+                                                    e('div', { className: 'p-2 flex items-center justify-between min-w-[140px]' },
+                                                        e('a', { href: row[cKey], target: '_blank', className: 'text-[10px] text-emerald-400 hover:underline flex items-center gap-1 font-bold' }, e(Icon, { n: 'check-circle', size: 12 }), 'Uploaded'),
+                                                        e('button', { onClick: () => handleGridChange(rIdx, cKey, ''), className: 'text-[9px] text-red-400 hover:text-red-300 uppercase font-bold px-2 py-1 bg-red-400/10 rounded' }, 'X')
+                                                    ) :
+                                                    e('label', { className: 'flex items-center justify-center gap-2 p-3 text-[10px] font-bold uppercase text-sky-400 hover:text-sky-300 cursor-pointer min-w-[140px] hover:bg-slate-800/50 transition-colors' },
+                                                        e(Icon, { n: 'image-plus', size: 14 }),
+                                                        'Upload Photo',
+                                                        e('input', { type: 'file', accept: 'image/*', className: 'hidden', onChange: (e) => handlePhotoUpload(e, rIdx) })
+                                                    );
+                                            } else {
+                                                cellInput = e('input', {
+                                                    type: 'text',
+                                                    value: row[cKey],
+                                                    onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
+                                                    onPaste: (e) => handleGridPaste(e, rIdx, cIdx),
+                                                    placeholder: rIdx === 0 && cKey === 'id' ? 'BDMS00...' : rIdx === 0 ? `e.g. ${cKey}` : '',
+                                                    className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[140px] placeholder:text-slate-600'
+                                                });
+                                            }
+
+                                            return e('td', { key: cKey, className: 'border-b border-r border-slate-800 p-0 relative' }, cellInput);
+                                        })
                                     ))
                                 )
                             )
