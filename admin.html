@@ -1202,8 +1202,9 @@
                 const headerMap = {};
                 rawHeaders.forEach(h => {
                     const low = h.trim().toLowerCase();
-                    if(low === 'fathername' || low === 'father name') headerMap[h] = 'fname';
-                    else if(low === 'photourl' || low === 'photo url') headerMap[h] = 'photo';
+                    if(low === 'fathername' || low === 'father name' || low === "father's name") headerMap[h] = 'fname';
+                    else if(low === 'photourl' || low === 'photo url' || low === 'photo') headerMap[h] = 'photo';
+                    else if(low === 'dob' || low === 'date of birth') headerMap[h] = 'dob';
                     else headerMap[h] = low;
                 });
 
@@ -1221,6 +1222,7 @@
                     }
                 });
                 
+                if(studentsToUpload.length === 0) return alert("No valid students found. Make sure you included the header row when copying (ID, Name, etc).");
                 uploadToFirebase(studentsToUpload);
             };
 
@@ -1251,7 +1253,7 @@
                 
                 try {
                     const rows = pasteData.split('\n').filter(r => r.trim());
-                    if(rows.length < 2) return alert("Not enough data. Make sure you copy headers and at least one row of data.");
+                    if(rows.length < 2) return alert("Not enough data. Make sure you copy the blue HEADER ROW and at least one student row.");
                     
                     const headers = rows[0].split('\t').map(h => h.trim().toLowerCase());
                     const jsonData = [];
@@ -1300,11 +1302,12 @@
                     
                     e('div', { className: 'bg-slate-900/40 p-5 rounded-xl border border-slate-850 flex flex-col' },
                         e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 2: Copy & Paste'),
-                        e('p', { className: 'text-xs text-slate-400 mb-4' }, 'Highlight rows in Excel, press Ctrl+C, and paste them below.'),
+                        e('p', { className: 'text-xs text-slate-400 mb-2' }, 'Highlight the rows in your spreadsheet, press Ctrl+C, and paste them below.'),
+                        e('div', { className: 'text-[9px] font-bold text-sky-400/80 mb-3 p-2 bg-sky-900/20 rounded-lg border border-sky-900/50' }, '⚠️ IMPORTANT: You MUST include the header row (ID, Name, Date of Birth, etc.) when copying!'),
                         e('textarea', {
                             value: pasteData,
                             onChange: (e) => setPasteData(e.target.value),
-                            placeholder: "Paste rows here...",
+                            placeholder: "ID\tName\tFather's Name\tDate of Birth\tAddress\tClass\tPhoto\nBDMS001\tRohan Sharma\tAjay Sharma\t...",
                             className: 'w-full h-24 p-3 rounded-xl bg-slate-900/80 text-xs font-mono text-slate-300 border border-slate-800 focus:border-sky-500 transition-colors resize-none mb-3'
                         }),
                         e('button', {
