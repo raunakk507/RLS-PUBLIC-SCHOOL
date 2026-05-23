@@ -1395,36 +1395,35 @@
                                     e('tr', null, gridHeaders.map(h => e('th', { key: h, className: 'p-3 border-b border-r border-slate-700/50 whitespace-nowrap font-bold' }, h)))
                                 ),
                                 e('tbody', null,
-                                    gridData.map((row, rIdx) => e('tr', { key: rIdx, className: 'hover:bg-slate-800/40 transition-colors bg-slate-900/30' },
+                                    gridData.map((row, rIdx) => e('tr', { key: rIdx, className: 'hover:bg-slate-50 transition-colors bg-white' },
                                         gridCols.map((cKey, cIdx) => {
                                             let cellInput;
-                                            const commonClasses = 'w-full h-full bg-transparent p-3 text-xs text-slate-200 focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:z-10 relative min-w-[140px] transition-all placeholder:text-slate-600';
-                                            const selectArrowClass = `bg-[url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>")] bg-no-repeat bg-[position:right_10px_center] bg-[length:16px] pr-8`;
+                                            const commonClasses = 'w-full h-full bg-transparent p-3 text-xs text-slate-800 font-medium focus:bg-slate-100/80 focus:outline-none focus:ring-1 focus:ring-sky-500 focus:z-10 relative min-w-[140px] transition-all placeholder:text-slate-400';
                                             
                                             if (cKey === 'address') {
                                                 cellInput = e('select', {
                                                     value: row[cKey],
                                                     onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
-                                                    className: `${commonClasses} appearance-none cursor-pointer ${selectArrowClass}`
+                                                    className: `${commonClasses} cursor-pointer`
                                                 }, 
-                                                    e('option', { value: '', className: 'bg-slate-800 text-slate-400' }, 'Select...'),
-                                                    FEE_ADDRESSES.map(addr => e('option', { key: addr, value: addr, className: 'bg-slate-800 text-slate-200' }, addr))
+                                                    e('option', { value: '', className: 'bg-white text-slate-400' }, 'Select...'),
+                                                    FEE_ADDRESSES.map(addr => e('option', { key: addr, value: addr, className: 'bg-white text-slate-800' }, addr))
                                                 );
                                             } else if (cKey === 'class') {
                                                 cellInput = e('select', {
                                                     value: row[cKey],
                                                     onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
-                                                    className: `${commonClasses} appearance-none cursor-pointer min-w-[120px] ${selectArrowClass}`
+                                                    className: `${commonClasses} cursor-pointer min-w-[120px]`
                                                 }, 
-                                                    e('option', { value: '', className: 'bg-slate-800 text-slate-400' }, 'Select...'),
-                                                    CLASSES.map(cls => e('option', { key: cls, value: cls, className: 'bg-slate-800 text-slate-200' }, cls))
+                                                    e('option', { value: '', className: 'bg-white text-slate-400' }, 'Select...'),
+                                                    CLASSES.map(cls => e('option', { key: cls, value: cls, className: 'bg-white text-slate-800' }, cls))
                                                 );
                                             } else if (cKey === 'dob') {
                                                 cellInput = e('input', {
                                                     type: 'date',
                                                     value: row[cKey],
                                                     onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
-                                                    className: `${commonClasses} [color-scheme:dark] cursor-pointer`
+                                                    className: `${commonClasses} cursor-pointer`
                                                 });
                                             } else if (cKey === 'photo') {
                                                 cellInput = row.uploadingPhoto ? 
