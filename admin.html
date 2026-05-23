@@ -342,6 +342,9 @@
     <div class="ambient-blob-2"></div>
     <div id="root"></div>
 
+    <!-- SheetJS for Excel Uploads -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
     <!-- Firebase SDK Setup -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1142,14 +1145,13 @@
             const [syncing, setSyncing] = useState(false);
             const [students, setStudents] = useState([]);
             const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
-            const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('bdms_google_sheet_url') || '');
+            const [pasteData, setPasteData] = useState('');
 
             useEffect(() => {
                 if (!window.firebaseDB) return;
                 
                 const colRef = window.fs_collection(window.firebaseDB, 'students');
                 
-                // Real-time listener
                 const unsubscribe = window.fs_onSnapshot(colRef, (snapshot) => {
                     const db = [];
                     snapshot.forEach(doc => {
@@ -1163,69 +1165,17 @@
                     });
                 }, (error) => {
                     console.error("Firebase sync error:", error);
-                    alert("Could not connect to Firebase. Check database rules.");
                 });
 
-                return () => {
-                    unsubscribe();
-                };
+                return () => unsubscribe();
             }, []);
 
-            const syncFromSheet = async () => {
+            const uploadToFirebase = async (studentsToUpload) => {
                 if (!window.firebaseDB) return alert("Firebase not initialized.");
-                
-                const sheetIdMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                if (!sheetIdMatch) return alert("Please enter a valid Google Sheet sharing link (must contain /d/...).");
-                const sheetId = sheetIdMatch[1];
-                
+                if (studentsToUpload.length === 0) return alert("No valid student data found. Ensure you have an 'ID' column.");
+
                 setSyncing(true);
-                localStorage.setItem('bdms_google_sheet_url', sheetUrl);
-                
-                const csvExportUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
-                
                 try {
-                    const response = await fetch(csvExportUrl);
-                    if (!response.ok) throw new Error("Failed to fetch sheet. Make sure it is shared as 'Anyone with the link can view' or 'edit'.");
-                    const csvText = await response.text();
-                    
-                    // Basic CSV parser
-                    const rows = csvText.split('\n');
-                    if (rows.length < 2) throw new Error("Sheet appears empty");
-                    
-                    const headers = rows[0].split(',').map(h => h.trim().toLowerCase());
-                    const studentsToUpload = [];
-                    
-                    for (let i = 1; i < rows.length; i++) {
-                        if (!rows[i].trim()) continue;
-                        
-                        // Handle basic quotes to avoid breaking on commas inside addresses
-                        let values = [];
-                        let inQuote = false;
-                        let currentVal = '';
-                        for(let char of rows[i]) {
-                            if(char === '"') inQuote = !inQuote;
-                            else if(char === ',' && !inQuote) { values.push(currentVal.trim()); currentVal = ''; }
-                            else currentVal += char;
-                        }
-                        values.push(currentVal.trim());
-                        
-                        const student = {};
-                        headers.forEach((header, index) => {
-                            let key = header;
-                            if(header === 'fathername' || header === 'father name') key = 'fname';
-                            if(header === 'photourl' || header === 'photo url') key = 'photo';
-                            student[key] = values[index] || '';
-                        });
-                        
-                        if (student.id) {
-                            student.status = student.status || 'Active';
-                            student.fees = student.fees || '0';
-                            studentsToUpload.push(student);
-                        }
-                    }
-
-                    if(studentsToUpload.length === 0) throw new Error("No valid students found. Ensure you have an 'ID' column.");
-
                     const colRef = window.fs_collection(window.firebaseDB, 'students');
                     
                     const uploadPromises = studentsToUpload.map(student => {
@@ -1236,21 +1186,95 @@
                     await Promise.all(uploadPromises);
                     
                     setSyncing(false);
-                    alert(`Successfully synced ${studentsToUpload.length} students from the Embedded Google Sheet!`);
+                    setPasteData('');
+                    alert(`Successfully synced ${studentsToUpload.length} students to Firebase!`);
                 } catch (error) {
-                    console.error("Sheet sync error: ", error);
-                    alert("Sync failed. Check your URL. Make sure link sharing is turned ON. Error: " + error.message);
+                    console.error("Firebase upload error: ", error);
+                    alert("Upload failed: " + error.message);
                     setSyncing(false);
                 }
             };
 
-            const sheetIdMatch = sheetUrl ? sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/) : null;
-            const embedUrl = sheetIdMatch ? `https://docs.google.com/spreadsheets/d/${sheetIdMatch[1]}/edit?widget=true&headers=false` : null;
+            const processJSON = (jsonData) => {
+                if(jsonData.length === 0) return alert("File appears empty or unreadable.");
+                
+                const rawHeaders = Object.keys(jsonData[0]);
+                const headerMap = {};
+                rawHeaders.forEach(h => {
+                    const low = h.trim().toLowerCase();
+                    if(low === 'fathername' || low === 'father name') headerMap[h] = 'fname';
+                    else if(low === 'photourl' || low === 'photo url') headerMap[h] = 'photo';
+                    else headerMap[h] = low;
+                });
+
+                const studentsToUpload = [];
+                jsonData.forEach(row => {
+                    const student = {};
+                    for(let rawKey in row) {
+                        const cleanKey = headerMap[rawKey];
+                        if(cleanKey) student[cleanKey] = row[rawKey] ? String(row[rawKey]).trim() : '';
+                    }
+                    if(student.id) {
+                        student.status = student.status || 'Active';
+                        student.fees = student.fees || '0';
+                        studentsToUpload.push(student);
+                    }
+                });
+                
+                uploadToFirebase(studentsToUpload);
+            };
+
+            const handleFileUpload = (e_file) => {
+                const file = e_file.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                        processJSON(jsonData);
+                    } catch(err) {
+                        alert("Error reading file. Make sure it is a valid .xlsx or .csv file.");
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+                e_file.target.value = null;
+            };
+
+            const handlePasteUpload = () => {
+                if(!pasteData.trim()) return alert("Please paste some data first.");
+                
+                try {
+                    const rows = pasteData.split('\n').filter(r => r.trim());
+                    if(rows.length < 2) return alert("Not enough data. Make sure you copy headers and at least one row of data.");
+                    
+                    const headers = rows[0].split('\t').map(h => h.trim().toLowerCase());
+                    const jsonData = [];
+                    
+                    for(let i=1; i<rows.length; i++) {
+                        const values = rows[i].split('\t');
+                        const obj = {};
+                        headers.forEach((h, index) => {
+                            if(h) obj[h] = values[index] ? values[index].trim() : '';
+                        });
+                        jsonData.push(obj);
+                    }
+                    processJSON(jsonData);
+                } catch(err) {
+                    alert("Error parsing pasted data. Ensure it is copied directly from Excel/Google Sheets.");
+                    console.error(err);
+                }
+            };
 
             return e('div', { className: 'clay-card p-6 md:p-8 text-white' },
                 e('div', { className: 'flex justify-between items-center mb-6' },
-                    e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2' }, [e(Icon, { n: 'database', size: 18, cls: 'text-sky-400' }), 'Live Data Sync']),
-                    e('span', { className: 'text-[9px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-1.5' }, [e(Icon, { n: 'link', size: 12 }), 'Google Sheets Connect'])
+                    e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2' }, [e(Icon, { n: 'database', size: 18, cls: 'text-sky-400' }), 'Bulk Student Upload']),
+                    e('span', { className: 'text-[9px] font-bold text-sky-400 uppercase tracking-widest flex items-center gap-1.5' }, [e(Icon, { n: 'upload-cloud', size: 12 }), 'Firebase Sync'])
                 ),
                 e('div', { className: 'mb-6 flex justify-between items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800' },
                     e('div', null,
@@ -1262,35 +1286,56 @@
                         e('p', { className: 'text-xs font-bold text-slate-300' }, dbStats.lastSync)
                     )
                 ),
-                e('div', { className: 'bg-slate-900/40 p-4 rounded-xl border border-slate-850 space-y-4' },
-                    e('div', null,
-                        e('label', { className: 'block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2' }, 'Google Sheet Edit Link'),
-                        e('div', { className: 'flex gap-2' },
-                            e('input', { 
-                                type: 'text', 
-                                value: sheetUrl, 
-                                onChange: (e) => setSheetUrl(e.target.value),
-                                placeholder: 'Paste the Google Sheet Share Link here...',
-                                className: 'w-full p-3 rounded-xl bg-slate-900/80 text-xs font-mono text-sky-300 border border-slate-800 focus:border-sky-500 transition-colors' 
-                            }),
-                            e('button', { 
-                                onClick: syncFromSheet,
-                                disabled: syncing || !sheetIdMatch,
-                                className: `flex-shrink-0 flex items-center justify-center px-6 rounded-xl transition-all font-black text-xs uppercase tracking-wider ${sheetIdMatch ? 'bg-sky-600 hover:bg-sky-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}` 
-                            }, 
-                                syncing ? e('div', { className: 'w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2' }) : e(Icon, { n: 'refresh-cw', size: 14, cls: 'mr-2' }),
-                                'Sync to Firebase'
-                            )
+                
+                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                    e('div', { className: 'bg-slate-900/40 p-5 rounded-xl border border-slate-850 flex flex-col' },
+                        e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 1: Upload File'),
+                        e('p', { className: 'text-xs text-slate-400 mb-4 flex-1' }, 'Select an Excel (.xlsx) or .csv file directly from your computer.'),
+                        e('label', { className: 'flex flex-col items-center justify-center p-6 border-2 border-dashed border-sky-500/30 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 transition-colors cursor-pointer' },
+                            syncing ? e('div', { className: 'w-6 h-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-2' }) : e(Icon, { n: 'file-spreadsheet', size: 28, cls: 'text-sky-400 mb-3' }),
+                            e('span', { className: 'text-[11px] font-bold text-slate-300 text-center' }, syncing ? 'Syncing...' : 'Click to Upload Excel File'),
+                            e('input', { type: 'file', accept: '.xlsx, .xls, .csv', className: 'hidden', onChange: handleFileUpload, disabled: syncing })
+                        )
+                    ),
+                    
+                    e('div', { className: 'bg-slate-900/40 p-5 rounded-xl border border-slate-850 flex flex-col' },
+                        e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 2: Copy & Paste'),
+                        e('p', { className: 'text-xs text-slate-400 mb-4' }, 'Highlight rows in Excel, press Ctrl+C, and paste them below.'),
+                        e('textarea', {
+                            value: pasteData,
+                            onChange: (e) => setPasteData(e.target.value),
+                            placeholder: "Paste rows here...",
+                            className: 'w-full h-24 p-3 rounded-xl bg-slate-900/80 text-xs font-mono text-slate-300 border border-slate-800 focus:border-sky-500 transition-colors resize-none mb-3'
+                        }),
+                        e('button', {
+                            onClick: handlePasteUpload,
+                            disabled: syncing || !pasteData.trim(),
+                            className: `w-full flex items-center justify-center p-3 rounded-xl transition-all font-black text-xs uppercase tracking-wider ${pasteData.trim() ? 'bg-sky-600 hover:bg-sky-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`
+                        }, 
+                            syncing ? 'Syncing...' : 'Upload Pasted Data'
                         )
                     )
                 ),
-                embedUrl && e('div', { className: 'mt-6 border border-slate-800 rounded-xl overflow-hidden bg-white h-[400px]' },
-                    e('iframe', {
-                        src: embedUrl,
-                        className: 'w-full h-full border-0',
-                        title: 'Google Sheet Editor'
-                    })
-                ),
+
+                students.length > 0 && e('div', { className: 'mt-8' },
+                    e('h4', { className: 'text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center justify-between' }, 
+                        'Current Records',
+                        e('span', { className: 'text-sky-400 font-black' }, `${students.length} Total`)
+                    ),
+                    e('div', { className: 'space-y-3 max-h-60 overflow-y-auto pr-2' },
+                        students.map(s => e('div', { key: s.id, className: 'flex items-center gap-3 p-3 bg-slate-900/50 rounded-xl border border-slate-800' },
+                            e('img', { src: s.photo, className: 'w-10 h-10 rounded-lg object-cover shadow-sm' }),
+                            e('div', { className: 'flex-1' },
+                                e('p', { className: 'text-[11px] font-black text-slate-100 leading-none' }, s.name),
+                                e('p', { className: 'text-[9px] font-bold text-sky-450 mt-1 uppercase tracking-tighter' }, s.id)
+                            ),
+                            e('div', { className: 'text-right' },
+                                e('p', { className: 'text-[10px] font-black text-slate-300' }, s.class),
+                                e('p', { className: 'text-[8px] font-bold text-green-400 uppercase' }, s.status)
+                            )
+                        ))
+                    )
+                )
             );
         };
 
