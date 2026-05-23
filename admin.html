@@ -494,7 +494,7 @@
                 padding-bottom: 0 !important;
             }
             
-            td:first-child {
+            table:not(.glass-grid-table) td:first-child {
                 border-bottom: 1.5px solid rgba(14, 165, 233, 0.15) !important;
                 padding-top: 0 !important;
                 padding-bottom: 0.75rem !important;
@@ -504,22 +504,54 @@
             }
             
             /* Inject labels dynamically for the columns */
-            td:nth-of-type(2)::before { content: "Class:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
-            td:nth-of-type(3)::before { content: "Due Amount:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
-            td:nth-of-type(4)::before { content: "Status:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
-            td:nth-of-type(5)::before { content: "Dept Invoice:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
-            td:nth-of-type(6)::before { content: "Actions:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
+            table:not(.glass-grid-table) td:nth-of-type(2)::before { content: "Class:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
+            table:not(.glass-grid-table) td:nth-of-type(3)::before { content: "Due Amount:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
+            table:not(.glass-grid-table) td:nth-of-type(4)::before { content: "Status:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
+            table:not(.glass-grid-table) td:nth-of-type(5)::before { content: "Dept Invoice:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
+            table:not(.glass-grid-table) td:nth-of-type(6)::before { content: "Actions:"; font-weight: 850; color: #475569; text-transform: uppercase; font-size: 0.7rem; float: left; text-align: left; }
             
             /* Compact active row lists, buttons and alignments */
-            td .flex {
+            table:not(.glass-grid-table) td .flex {
                 justify-content: flex-end !important;
                 width: auto !important;
                 gap: 0.25rem !important;
             }
-            td button {
+            table:not(.glass-grid-table) td button {
                 padding: 0.3rem 0.5rem !important;
                 font-size: 0.65rem !important;
                 border-radius: 0.5rem !important;
+            }
+
+            /* Compact glass-grid-table mobile adjustments */
+            .glass-grid-thead th {
+                padding: 0.4rem 0.5rem !important;
+                font-size: 0.65rem !important;
+            }
+            .glass-grid-td {
+                padding: 0.3rem 0.4rem !important;
+            }
+            .clay-input-field {
+                height: 2.25rem !important;
+                padding: 0.25rem 0.5rem !important;
+                font-size: 0.7rem !important;
+            }
+            .glass-grid-table .min-w-\[140px\] {
+                min-width: 105px !important;
+            }
+            .glass-grid-table button.clay-danger-btn,
+            .glass-grid-table a.clay-success-badge,
+            .glass-grid-table label.clay-upload-btn {
+                min-width: 105px !important;
+                height: 2.25rem !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                padding: 0 !important;
+                font-size: 0.65rem !important;
+            }
+            .glass-dropdown-popup div {
+                padding: 0.35rem 0.5rem !important;
+                font-size: 0.7rem !important;
             }
         }
     </style>
@@ -1360,16 +1392,16 @@
                     e(Icon, { n: 'chevron-down', size: 14, cls: 'text-sky-500 transition-transform duration-300 ' + (isOpen ? 'rotate-180' : '') })
                 ]),
                 isOpen && e('div', { 
-                    className: 'absolute z-50 left-0 right-0 mt-1 bg-white/95 backdrop-blur-xl border border-sky-100 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar p-1 flex flex-col gap-0.5' 
+                    className: 'glass-dropdown-popup absolute z-50 left-0 right-0 bg-white/95 backdrop-blur-xl border border-sky-100 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scrollbar p-0 flex flex-col' 
                 },
                     e('div', {
                         onClick: () => { onChange(''); setIsOpen(false); },
-                        className: 'hover:bg-slate-50 hover:text-slate-650 transition-colors p-2 text-xs font-semibold cursor-pointer rounded-lg ' + (!selectedOption ? 'bg-sky-50/50 text-sky-600' : 'text-slate-500')
+                        className: 'hover:bg-slate-50 hover:text-slate-650 transition-colors px-2 py-1 text-xs font-semibold cursor-pointer ' + (!selectedOption ? 'bg-sky-50/50 text-sky-600' : 'text-slate-500')
                     }, placeholder || 'Select...'),
                     options.map(opt => e('div', {
                         key: opt,
                         onClick: () => { onChange(opt); setIsOpen(false); },
-                        className: 'hover:bg-sky-50 hover:text-sky-650 transition-colors p-2 text-xs font-bold cursor-pointer rounded-lg ' + (selectedOption === opt ? 'bg-sky-100/50 text-sky-600' : 'text-slate-700')
+                        className: 'hover:bg-sky-50 hover:text-sky-650 transition-colors px-2 py-1 text-xs font-bold cursor-pointer ' + (selectedOption === opt ? 'bg-sky-100/50 text-sky-600' : 'text-slate-700')
                     }, opt))
                 )
             );
