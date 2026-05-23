@@ -450,21 +450,26 @@
                 display: none !important;
             }
 
-            /* Responsive table behavior for Admin Portal Student Fee Status */
-            table, thead, tbody, th, td, tr {
+            /* Responsive table behavior for Admin Portal Student Fee Status (excluding our glass grid) */
+            table:not(.glass-grid-table), 
+            table:not(.glass-grid-table) thead, 
+            table:not(.glass-grid-table) tbody, 
+            table:not(.glass-grid-table) th, 
+            table:not(.glass-grid-table) td, 
+            table:not(.glass-grid-table) tr {
                 display: block !important;
                 width: 100% !important;
                 box-sizing: border-box !important;
             }
             
-            thead tr {
+            table:not(.glass-grid-table) thead tr {
                 position: absolute !important;
                 top: -9999px !important;
                 left: -9999px !important;
                 display: none !important;
             }
             
-            tr {
+            table:not(.glass-grid-table) tr {
                 border: 1px solid rgba(14, 165, 233, 0.12) !important;
                 background: rgba(14, 165, 233, 0.03) !important;
                 border-radius: 1.25rem !important;
@@ -473,7 +478,7 @@
                 box-shadow: 0 4px 10px rgba(0, 0, 0, 0.01) !important;
             }
             
-            td {
+            table:not(.glass-grid-table) td {
                 border: none !important;
                 position: relative !important;
                 padding: 0.5rem 0 !important;
@@ -484,7 +489,7 @@
                 border-bottom: 1px dashed rgba(14, 165, 233, 0.08) !important;
             }
             
-            td:last-child {
+            table:not(.glass-grid-table) td:last-child {
                 border-bottom: none !important;
                 padding-bottom: 0 !important;
             }
@@ -561,7 +566,7 @@
         console.log("Firebase initialized securely with Storage.");
     </script>
 
-    <script>
+    <script type="module">
         // One-time Reset of Local Storage Admissions Database to Clear Legacy Bloated/Wiped Records
         if (!localStorage.getItem('bdms_db_reset_2026_05_20')) {
             localStorage.removeItem('bdms_admissions_db');
@@ -1383,8 +1388,24 @@
             const gridCols = ['id', 'name', 'fname', 'dob', 'address', 'class', 'photo'];
             const gridHeaders = ['ID', 'Name', "Father's Name", 'DOB', 'Address', 'Class', 'Photo'];
 
+            const [firebaseReady, setFirebaseReady] = useState(!!window.firebaseDB);
+
             useEffect(() => {
-                if (!window.firebaseDB) return;
+                if (window.firebaseDB) {
+                    setFirebaseReady(true);
+                    return;
+                }
+                const interval = setInterval(() => {
+                    if (window.firebaseDB) {
+                        setFirebaseReady(true);
+                        clearInterval(interval);
+                    }
+                }, 100);
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                if (!firebaseReady || !window.firebaseDB) return;
                 
                 const colRef = window.fs_collection(window.firebaseDB, 'students');
                 
@@ -1404,7 +1425,7 @@
                 });
 
                 return () => unsubscribe();
-            }, []);
+            }, [firebaseReady]);
 
             const uploadToFirebase = async (studentsToUpload) => {
                 if (!window.firebaseDB) return alert("Firebase not initialized.");
