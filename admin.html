@@ -342,6 +342,34 @@
     <div class="ambient-blob-2"></div>
     <div id="root"></div>
 
+    <!-- Firebase SDK Setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, setDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCUuUCykR9GUsfC7-MiMyHqoO2OTzoax8s",
+            authDomain: "b-d-modern-school-5c692.firebaseapp.com",
+            projectId: "b-d-modern-school-5c692",
+            storageBucket: "b-d-modern-school-5c692.firebasestorage.app",
+            messagingSenderId: "319437900160",
+            appId: "1:319437900160:web:739f988050091cdd5d5965",
+            measurementId: "G-TRXEYPH4YT"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Expose to window so our existing React code can access them
+        window.firebaseDB = db;
+        window.fs_collection = collection;
+        window.fs_getDocs = getDocs;
+        window.fs_setDoc = setDoc;
+        window.fs_doc = doc;
+        window.fs_onSnapshot = onSnapshot;
+        console.log("Firebase initialized securely.");
+    </script>
+
     <script>
         // One-time Reset of Local Storage Admissions Database to Clear Legacy Bloated/Wiped Records
         if (!localStorage.getItem('bdms_db_reset_2026_05_20')) {
@@ -1116,24 +1144,31 @@
             const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
 
             useEffect(() => {
-                const loadData = () => {
-                    const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
+                if (!window.firebaseDB) return;
+                
+                const colRef = window.fs_collection(window.firebaseDB, 'students');
+                
+                // Real-time listener
+                const unsubscribe = window.fs_onSnapshot(colRef, (snapshot) => {
+                    const db = [];
+                    snapshot.forEach(doc => {
+                        db.push({ id: doc.id, ...doc.data() });
+                    });
+                    
                     setStudents(db);
-                    setDbStats({ count: db.length, lastSync: localStorage.getItem('bdms_firebase_sync') || 'Never' });
-                };
-                loadData();
-
-                const handleStorageChange = (e) => {
-                    if (e.key === 'bdms_firebase_mock' || e.key === 'bdms_firebase_sync') {
-                        loadData();
-                    }
-                };
-                window.addEventListener('storage', handleStorageChange);
+                    setDbStats({ 
+                        count: db.length, 
+                        lastSync: new Date().toLocaleTimeString()
+                    });
+                }, (error) => {
+                    console.error("Firebase sync error:", error);
+                    alert("Could not connect to Firebase. Check database rules.");
+                });
 
                 return () => {
-                    window.removeEventListener('storage', handleStorageChange);
+                    unsubscribe();
                 };
-            }, [syncing]);
+            }, []);
 
             const downloadTemplate = () => {
                 const csvContent = "ID,Name,FatherName,DOB,Address,Class,Attendance,Rank,PhotoURL\nBDMS001,Rahul Kumar,Suresh Kumar,12/05/2010,\"Mopti Bazar, Bhojpur\",10th,95%,#1,https://images.unsplash.com/photo-1597223557154-721c1cecc4b0\nBDMS002,Priya Sharma,Rajesh Sharma,22/08/2011,\"Piro Road, Bhojpur\",10th,88%,#12,https://images.unsplash.com/photo-1544005313-94ddf0286df2";
@@ -1148,29 +1183,34 @@
                 document.body.removeChild(a);
             };
 
-            const triggerSync = (isSample = false) => {
+            const triggerSync = async (isSample = false) => {
+                if (!window.firebaseDB) return alert("Firebase not initialized.");
+                
                 setSyncing(true);
-                setTimeout(() => {
+                try {
                     const mockData = [
                         { id: 'BDMS001', name: 'Rahul Kumar', fname: 'Suresh Kumar', dob: '12/05/2010', address: 'Mopti Bazar, Bhojpur', photo: 'https://images.unsplash.com/photo-1597223557154-721c1cecc4b0?auto=format&fit=crop&q=80&w=100', class: '10th', attendance: '95%', rank: '#1', courses: '06', status: 'Active', fees: '1,500' },
                         { id: 'BDMS002', name: 'Priya Sharma', fname: 'Rajesh Sharma', dob: '22/08/2011', address: 'Piro Road, Bhojpur', photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=100', class: '10th', attendance: '88%', rank: '#12', courses: '06', status: 'Active', fees: '1,200' },
                         { id: 'BDMS003', name: 'Amit Singh', fname: 'Vijay Singh', dob: '05/01/2012', address: 'Sikarhatta, Bhojpur', photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=100', class: '9th', attendance: '92%', rank: '#5', courses: '05', status: 'Active', fees: '1,800' }
                     ];
-                    let currentDb = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
-                    mockData.forEach(mockStudent => {
-                        const existingIndex = currentDb.findIndex(s => s.id === mockStudent.id);
-                        if (existingIndex === -1) {
-                            currentDb.push(mockStudent);
-                        } else {
-                            currentDb[existingIndex] = { ...mockStudent, password: currentDb[existingIndex].password };
-                        }
+
+                    const colRef = window.fs_collection(window.firebaseDB, 'students');
+                    
+                    // Push all mock data to Firestore securely
+                    const uploadPromises = mockData.map(student => {
+                        const docRef = window.fs_doc(colRef, student.id);
+                        return window.fs_setDoc(docRef, student, { merge: true });
                     });
-                    localStorage.setItem('bdms_firebase_mock', JSON.stringify(currentDb));
-                    const time = new Date().toLocaleTimeString();
-                    localStorage.setItem('bdms_firebase_sync', time);
+                    
+                    await Promise.all(uploadPromises);
+                    
                     setSyncing(false);
                     alert(isSample ? 'Sample data successfully injected into Firebase!' : 'Successfully synced student records from file!');
-                }, 1500);
+                } catch (error) {
+                    console.error("Error writing to Firestore: ", error);
+                    alert("Sync failed. Check console and make sure Firestore rules are set to Test Mode.");
+                    setSyncing(false);
+                }
             };
 
             const handleFileUpload = (e_file) => {
