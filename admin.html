@@ -1145,7 +1145,11 @@
             const [syncing, setSyncing] = useState(false);
             const [students, setStudents] = useState([]);
             const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
-            const [pasteData, setPasteData] = useState('');
+            
+            const defaultGrid = Array(5).fill(null).map(() => ({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' }));
+            const [gridData, setGridData] = useState(defaultGrid);
+            const gridCols = ['id', 'name', 'fname', 'dob', 'address', 'class', 'photo'];
+            const gridHeaders = ['ID', 'Name', "Father's Name", 'DOB', 'Address', 'Class', 'Photo URL'];
 
             useEffect(() => {
                 if (!window.firebaseDB) return;
@@ -1202,9 +1206,8 @@
                 const headerMap = {};
                 rawHeaders.forEach(h => {
                     const low = h.trim().toLowerCase();
-                    if(low === 'fathername' || low === 'father name' || low === "father's name") headerMap[h] = 'fname';
-                    else if(low === 'photourl' || low === 'photo url' || low === 'photo') headerMap[h] = 'photo';
-                    else if(low === 'date of birth' || low === 'dob') headerMap[h] = 'dob';
+                    if(low === 'fathername' || low === 'father name') headerMap[h] = 'fname';
+                    else if(low === 'photourl' || low === 'photo url') headerMap[h] = 'photo';
                     else headerMap[h] = low;
                 });
 
@@ -1247,29 +1250,48 @@
                 e_file.target.value = null;
             };
 
-            const handlePasteUpload = () => {
-                if(!pasteData.trim()) return alert("Please paste some data first.");
-                
-                try {
-                    const rows = pasteData.split('\n').filter(r => r.trim());
-                    if(rows.length < 2) return alert("Not enough data. Make sure you copy headers and at least one row of data.");
-                    
-                    const headers = rows[0].split('\t').map(h => h.trim().toLowerCase());
-                    const jsonData = [];
-                    
-                    for(let i=1; i<rows.length; i++) {
-                        const values = rows[i].split('\t');
-                        const obj = {};
-                        headers.forEach((h, index) => {
-                            if(h) obj[h] = values[index] ? values[index].trim() : '';
-                        });
-                        jsonData.push(obj);
-                    }
-                    processJSON(jsonData);
-                } catch(err) {
-                    alert("Error parsing pasted data. Ensure it is copied directly from Excel/Google Sheets.");
-                    console.error(err);
+            const handleGridChange = (rIdx, cKey, val) => {
+                const newData = [...gridData];
+                newData[rIdx][cKey] = val;
+                if (rIdx === newData.length - 1 && val.trim() !== '') {
+                    newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' });
                 }
+                setGridData(newData);
+            };
+
+            const handleGridPaste = (e, rIdx, cIdx) => {
+                e.preventDefault();
+                const pasteText = (e.clipboardData || window.clipboardData).getData('text');
+                if(!pasteText) return;
+
+                const rows = pasteText.split('\n').map(r => r.split('\t'));
+                const newData = [...gridData];
+
+                rows.forEach((rowVals, rOffset) => {
+                    const targetRow = rIdx + rOffset;
+                    if (targetRow >= newData.length) {
+                         newData.push({ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '' });
+                    }
+                    rowVals.forEach((val, cOffset) => {
+                        const targetCol = cIdx + cOffset;
+                        if (targetCol < gridCols.length && val.trim() !== '') {
+                            newData[targetRow][gridCols[targetCol]] = val.trim();
+                        }
+                    });
+                });
+                setGridData(newData);
+            };
+
+            const handleGridUpload = () => {
+                const studentsToUpload = gridData.filter(r => r.id && r.id.trim() !== '');
+                if(studentsToUpload.length === 0) return alert("Please type or paste at least one student ID in the grid.");
+                
+                const processed = studentsToUpload.map(student => ({
+                    ...student,
+                    status: student.status || 'Active',
+                    fees: student.fees || '0'
+                }));
+                uploadToFirebase(processed);
             };
 
             return e('div', { className: 'clay-card p-6 md:p-8 text-white' },
@@ -1287,33 +1309,51 @@
                         e('p', { className: 'text-xs font-bold text-slate-300' }, dbStats.lastSync)
                     )
                 ),
-                
-                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' },
+                e('div', { className: 'space-y-6' },
                     e('div', { className: 'bg-slate-900/40 p-5 rounded-xl border border-slate-850 flex flex-col' },
-                        e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 1: Upload File'),
-                        e('p', { className: 'text-xs text-slate-400 mb-4 flex-1' }, 'Select an Excel (.xlsx) or .csv file. (For Google Sheets: File > Download > Microsoft Excel)'),
+                        e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 1: Upload Excel File'),
+                        e('p', { className: 'text-xs text-slate-400 mb-4' }, 'Select an Excel (.xlsx) or .csv file. (For Google Sheets: File > Download > Microsoft Excel)'),
                         e('label', { className: 'flex flex-col items-center justify-center p-6 border-2 border-dashed border-sky-500/30 rounded-xl bg-slate-900/60 hover:bg-slate-900/80 transition-colors cursor-pointer' },
                             syncing ? e('div', { className: 'w-6 h-6 border-2 border-sky-400 border-t-transparent rounded-full animate-spin mb-2' }) : e(Icon, { n: 'file-spreadsheet', size: 28, cls: 'text-sky-400 mb-3' }),
-                            e('span', { className: 'text-[11px] font-bold text-slate-300 text-center' }, syncing ? 'Syncing...' : 'Click to Upload Excel / CSV File'),
+                            e('span', { className: 'text-[11px] font-bold text-slate-300 text-center' }, syncing ? 'Syncing...' : 'Click to Upload File'),
                             e('input', { type: 'file', accept: '.xlsx, .xls, .csv', className: 'hidden', onChange: handleFileUpload, disabled: syncing })
                         )
                     ),
                     
                     e('div', { className: 'bg-slate-900/40 p-5 rounded-xl border border-slate-850 flex flex-col' },
-                        e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-3' }, 'Option 2: Copy & Paste'),
-                        e('p', { className: 'text-xs text-slate-400 mb-4' }, 'Highlight rows in Excel, press Ctrl+C, and paste them below.'),
-                        e('textarea', {
-                            value: pasteData,
-                            onChange: (e) => setPasteData(e.target.value),
-                            placeholder: "ID\tName\tFather's Name\tDate of Birth\tAddress\tClass\tPhoto\nBDMS001\tRohan Sharma\tAjay Sharma\t10/05/2015\t101 MG Road\t5th Grade\t[URL]",
-                            className: 'w-full h-24 p-3 rounded-xl bg-slate-900/80 text-[10px] whitespace-pre font-mono text-slate-400 border border-slate-800 focus:border-sky-500 transition-colors overflow-x-auto mb-3'
-                        }),
-                        e('button', {
-                            onClick: handlePasteUpload,
-                            disabled: syncing || !pasteData.trim(),
-                            className: `w-full flex items-center justify-center p-3 rounded-xl transition-all font-black text-xs uppercase tracking-wider ${pasteData.trim() ? 'bg-sky-600 hover:bg-sky-500 text-white' : 'bg-slate-800 text-slate-500 cursor-not-allowed'}`
-                        }, 
-                            syncing ? 'Syncing...' : 'Upload Pasted Data'
+                        e('div', { className: 'flex justify-between items-center mb-4' },
+                            e('div', null,
+                                e('h4', { className: 'text-[11px] font-bold text-sky-400 uppercase tracking-widest mb-1' }, 'Option 2: Live Spreadsheet Grid'),
+                                e('p', { className: 'text-xs text-slate-400' }, 'Type data below OR click the first cell and press Ctrl+V to paste from Google Sheets.')
+                            ),
+                            e('button', {
+                                onClick: handleGridUpload,
+                                disabled: syncing,
+                                className: 'flex items-center justify-center px-4 py-2 bg-sky-600 hover:bg-sky-500 rounded-lg transition-all font-black text-[10px] uppercase tracking-wider text-white'
+                            }, 
+                                syncing ? 'Syncing...' : 'Upload Grid Data'
+                            )
+                        ),
+                        e('div', { className: 'overflow-x-auto border border-slate-800 rounded-xl bg-slate-900/50 custom-scrollbar' },
+                            e('table', { className: 'w-full text-left border-collapse' },
+                                e('thead', { className: 'bg-slate-800/80 text-[10px] uppercase tracking-widest text-sky-400' },
+                                    e('tr', null, gridHeaders.map(h => e('th', { key: h, className: 'p-3 border-b border-r border-slate-700 whitespace-nowrap font-bold' }, h)))
+                                ),
+                                e('tbody', null,
+                                    gridData.map((row, rIdx) => e('tr', { key: rIdx, className: 'hover:bg-slate-800/30 transition-colors' },
+                                        gridCols.map((cKey, cIdx) => e('td', { key: cKey, className: 'border-b border-r border-slate-800 p-0' },
+                                            e('input', {
+                                                type: 'text',
+                                                value: row[cKey],
+                                                onChange: (e) => handleGridChange(rIdx, cKey, e.target.value),
+                                                onPaste: (e) => handleGridPaste(e, rIdx, cIdx),
+                                                placeholder: rIdx === 0 ? `e.g. ${cKey}` : '',
+                                                className: 'w-full h-full bg-transparent p-3 text-xs text-slate-300 focus:bg-slate-800/80 focus:outline-none min-w-[140px] placeholder:text-slate-600'
+                                            })
+                                        ))
+                                    ))
+                                )
+                            )
                         )
                     )
                 ),
