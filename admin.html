@@ -1487,7 +1487,7 @@
                     await Promise.all(uploadPromises);
                     
                     setSyncing(false);
-                    setPasteData('');
+                    setGridData(defaultGrid);
                     alert(`Successfully synced ${studentsToUpload.length} students to Firebase!`);
                 } catch (error) {
                     console.error("Firebase upload error: ", error);
