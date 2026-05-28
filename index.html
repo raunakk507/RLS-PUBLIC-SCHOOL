@@ -6,13 +6,6 @@
     <title>R.L.S. Public School | Piro, Bhojpur, Bihar</title>
     <link rel="icon" type="image/jpeg" href="http://rlspublicschool.in/assets/images/5e9b26a034cfc6.63821740.jpg" sizes="32x32">
     
-    <!-- PWA Progressive Web App Meta Tags -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0a192f">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="R.L.S. Public School">
-    <link rel="apple-touch-icon" href="pwa-icon.jpg">
     <!-- DNS prefetch + Preconnect for all CDN domains (faster connection setup) -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com">
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
@@ -23,17 +16,29 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <!-- Preload local critical assets -->
-    
-    <link rel="preload" href="sw.js" as="script">
 
-    <!-- Capture PWA install prompt instantly before React mounts to avoid race conditions -->
+    <!-- Intercept uncaught JS errors to prevent silent blank screens -->
     <script>
-        window.deferredPWAInstallPrompt = null;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            window.deferredPWAInstallPrompt = e;
-        });
+        window.onerror = function(message, source, lineno, colno, error) {
+            const root = document.getElementById('root');
+            if (root) {
+                root.style.display = 'block';
+                root.innerHTML = `
+                    <div style="padding: 24px; margin: 24px; background: #fee2e2; border: 2px solid #fca5a5; border-radius: 24px; color: #991b1b; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left;">
+                        <h2 style="margin-top: 0; font-size: 18px; font-weight: 800; display: flex; items-center: center; gap: 8px;">⚠️ Uncaught JavaScript Error</h2>
+                        <p style="font-size: 13px; font-weight: 600; margin: 12px 0 6px;">Please inspect the logs or take a screenshot of this error:</p>
+                        <div style="background: #fff; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 12px 0; overflow-x: auto; font-family: monospace; font-size: 12px; line-height: 1.5; color: #7f1d1d;">
+                            <strong>Message:</strong> ${message}<br>
+                            <strong>File:</strong> ${source}<br>
+                            <strong>Line:</strong> ${lineno} | <strong>Col:</strong> ${colno}
+                            ${error && error.stack ? `<br><br><strong>Stack Trace:</strong><br>${error.stack.replace(/\n/g, '<br>')}` : ''}
+                        </div>
+                        <p style="font-size: 11px; color: #b91c1c; margin-bottom: 0; font-weight: 700;">Tip: Make sure you are connected to the internet to load CDN libraries, or check if browser cookies/localStorage are enabled.</p>
+                    </div>
+                `;
+            }
+            return false;
+        };
     </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1384,7 +1389,6 @@
         .bg-sky-600,
         .bg-indigo-600,
         .bg-emerald-600,
-        .bg-slate-900,
         .portal-clay-btn-primary {
             background-color: #0B5CFF !important;
             color: #ffffff !important;
@@ -1399,7 +1403,6 @@
         .bg-sky-600:hover,
         .bg-indigo-600:hover,
         .bg-emerald-600:hover,
-        .bg-slate-900:hover,
         .portal-clay-btn-primary:hover {
             background-color: #004ee6 !important;
             transform: translateY(-2px) !important;
@@ -1412,7 +1415,6 @@
         .bg-sky-600:active,
         .bg-indigo-600:active,
         .bg-emerald-600:active,
-        .bg-slate-900:active,
         .portal-clay-btn-primary:active {
             transform: translateY(1px) !important;
             box-shadow: 
@@ -1674,6 +1676,29 @@
 <body>
     <div id="root"></div>
     <script>
+        // Safe localStorage wrapper to prevent SecurityError crashes on file:// protocol or blocked environments
+        let safeStorage;
+        try {
+            safeStorage = window.localStorage;
+            if (safeStorage) {
+                safeStorage.getItem('__test_ls_access__');
+            } else {
+                throw new Error('localStorage is null');
+            }
+        } catch (e) {
+            console.warn('[Portal] localStorage access is restricted in this environment. Using in-memory fallback.');
+            const memoryStorage = {};
+            safeStorage = {
+                getItem: (key) => memoryStorage[key] || null,
+                setItem: (key, value) => { memoryStorage[key] = String(value); },
+                removeItem: (key) => { delete memoryStorage[key]; },
+                clear: () => { for (const k in memoryStorage) delete memoryStorage[k]; },
+                key: (index) => Object.keys(memoryStorage)[index] || null,
+                get length() { return Object.keys(memoryStorage).length; }
+            };
+        }
+        const localStorage = safeStorage;
+
         // One-time Reset of Local Storage Admissions Database to Clear Legacy Bloated/Wiped Records
         if (!localStorage.getItem('bdms_db_reset_2026_05_20')) {
             localStorage.removeItem('bdms_admissions_db');
@@ -1682,6 +1707,107 @@
         }
 
         const e = React.createElement, { useState, useEffect } = React;
+
+        
+
+    
+        const RLS_SCHOOL_INFO = {
+    name: 'R.L.S. Public School',
+    fullName: 'R.L.S. Public School',
+    shortName: 'RLS',
+    tagline: 'CBSE Affiliated School (UPTO +2 LEVEL)',
+    principal: 'Dinesh Kumar Singh',
+    managingSociety: 'Indrasani Devi Educational Society',
+    established: '2015',
+    affiliation: 'CBSE, New Delhi',
+    affiliationNo: '330862',
+    schoolCode: '65860',
+    type: 'Co-educational',
+    level: 'Nursery to Class XII',
+    pinCode: '802207',
+    rating: '4.6/5',
+    communityMotto: 'A community with high expectation and high academic achievement.',
+    vision: 'Our vision at R.L.S. Public School is to empower students to acquire, demonstrate, articulate and value knowledge and skills that will support them, as life-long learners, to participate in and contribute to the global world and practise the core values of the school: respect, tolerance & inclusion, and excellence.',
+    mission: 'To provide differentiated, in-depth and cohesive learning programs that support the academic, social, emotional, and physical development of children, enabling all learners access to quality education.',
+    coreValues: ['Respect', 'Tolerance & Inclusion', 'Excellence'],
+    address: 'Baluwahi Tola, (Barauli) Piro, Bhojpur, Bihar – 802207',
+    addressShort: 'Piro, Bhojpur, Bihar',
+    location: 'Baluwahi Tola, Piro, Bhojpur',
+    state: 'Bihar',
+    phone1: '+91-9471911451',
+    phone2: '+91-9006845566',
+    email: 'rlspublicschool55@gmail.com',
+    officeHours: '08:30 AM – 02:30 PM',
+    website: 'https://rlspublicschool.in',
+    studentPortal: 'https://rlsps.gungunerp.in/',
+    playStoreApp: 'https://play.google.com/store/apps/details?id=com.apprlsps.gungunerp.rls',
+    whatsapp: 'https://api.whatsapp.com/send?phone=+919006845566&text=Welcome%20to%20R.L.S.%20Public%20School.%20How%20may%20we%20help%20you?',
+    facebook: 'https://www.facebook.com/RLS-Public-School-Piro-115535490484712/',
+    instagram: 'https://www.instagram.com/rlspublicschool55/',
+    twitter: 'https://twitter.com/RLSPUBLICSCHOO1',
+    youtube: 'https://www.youtube.com/channel/UCXG6ckkY5_Ow7XL3pfLMT9w',
+    stats: { students: 1180, teachers: 35, staff: 32, yearsOfExcellence: 9 },
+    facilities: ['Smart Class', 'Library', 'Science Labs', 'Transport', 'Sports Infrastructure', 'Conference Hall'],
+    events: ['Annual Award Function', 'Independence Day', 'Republic Day', 'Parent-Management Meetings', 'Science Exhibition', 'Sports Day', 'Cultural Celebrations'],
+    documents: ['Birth Certificate', 'Aadhar Card (Child + Parents)', 'Residence Proof', 'Passport Photos', 'Transfer Certificate (for higher classes)', 'Previous Report Cards'],
+    logoUrl: './logo.png',
+    faviconUrl: 'http://rlspublicschool.in/assets/images/5e9b26a034cfc6.63821740.jpg',
+    aboutPhotoUrl: 'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg',
+    mapsEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28849.67317151216!2d84.37820748381573!3d25.330761965374762!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x398d70e8e6fbf111%3A0x522b41218818f849!2sR.L.S%20PUBLIC%20SCHOOL!5e0!3m2!1sen!2sin!4v1613057792475!5m2!1sen!2sin'
+};
+        const RLS_FEE_STRUCTURE = {
+    session: '2022-23',
+    categories: ['Class I–III', 'Class IV–VI', 'Class VII–VIII', 'Class IX–X'],
+    fees: [
+        { name: 'Admission Form', frequency: 'One Time', amounts: [500, 500, 500, 500] },
+        { name: 'Admission Fee', frequency: 'One Time', amounts: [2500, 2500, 2500, 2500] },
+        { name: 'Development Fund', frequency: 'Annual', amounts: [1500, 1500, 1500, 1500] },
+        { name: 'Miscellaneous', frequency: 'Annual', amounts: [350, 350, 350, 350] },
+        { name: 'Exam Fee', frequency: 'Annual', amounts: [350, 350, 350, 350] },
+        { name: 'Festival Fee', frequency: 'Annual', amounts: [300, 300, 300, 300] },
+        { name: 'Society Fee', frequency: 'Monthly', amounts: [50, 50, 50, 50] },
+        { name: 'Tuition Fee', frequency: 'Monthly', amounts: [1100, 1250, 1400, 1550] },
+        { name: 'Total (First Year)', frequency: 'Total', amounts: [6650, 6800, 6950, 7100] }
+    ]
+};
+
+const RLS_KIDZEE_FEE_STRUCTURE = {
+    session: '2022-23',
+    category: 'Nursery to U.K.G',
+    fees: [
+        { name: 'Admission Form', frequency: 'One Time', amount: 500 },
+        { name: 'Admission Fee', frequency: 'One Time', amount: 2000 },
+        { name: 'Development Fund', frequency: 'Annual', amount: 1100 },
+        { name: 'Miscellaneous', frequency: 'Annual', amount: 300 },
+        { name: 'Exam Fee', frequency: 'Annual', amount: 300 },
+        { name: 'Festival Fee', frequency: 'Annual', amount: 300 },
+        { name: 'Society Fee', frequency: 'Monthly', amount: 50 },
+        { name: 'Tuition Fee', frequency: 'Monthly', amount: 950 },
+        { name: 'Total Fee', frequency: 'Total', amount: 5500 }
+    ]
+};
+
+        const RLS_GALLERY_PHOTOS = [
+    'http://rlspublicschool.in/assets/images/5e9b3231294c39.57902661.jpg',
+    'http://rlspublicschool.in/assets/images/6053fd1e98cb96.40885111.jpg',
+    'http://rlspublicschool.in/assets/images/68d241561ea7b1.51285988.jpg',
+    'http://rlspublicschool.in/assets/images/6053fc2f44b019.74126295.jpg',
+    'http://rlspublicschool.in/assets/images/68d241c1895282.51081358.png',
+    'http://rlspublicschool.in/assets/images/646f7fface93c4.20862286.jpg',
+    'http://rlspublicschool.in/assets/images/68d242cb341f77.30926076.jpg',
+    'http://rlspublicschool.in/assets/images/646f804dc97df1.80463924.jpg',
+    'http://rlspublicschool.in/assets/images/68d2426d5f4673.58097166.jpg',
+    'http://rlspublicschool.in/assets/images/68d24593556b55.90176539.jpg',
+    'http://rlspublicschool.in/assets/images/68d2464d736796.48614326.jpg',
+    'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg',
+    'http://rlspublicschool.in/assets/images/5eb8dc364705e5.82857038.jpg',
+    'http://rlspublicschool.in/assets/images/69a4f6c268d179.64618665.jpg',
+    'http://rlspublicschool.in/assets/images/691b400293b0d9.76254803.jpg',
+    'http://rlspublicschool.in/assets/images/691b40752436e3.45009539.jpg'
+];
+        // End RLS School Data
+        // ============================================================
+    
         const globalSyllabusDb = {
             'Nursery': {
                 'English': [
@@ -2137,7 +2263,7 @@
 
                 ctx.fillStyle = '#64748b';
                 ctx.font = '500 13px sans-serif';
-                ctx.fillText('Estd. 2018 \u00b7 Affiliated to CBSE Pattern', 400, 180);
+                ctx.fillText('Estd. 2015 \u00b7 Affiliated to CBSE Pattern', 400, 180);
 
                 // 4. White Card Body Container
                 ctx.fillStyle = '#ffffff';
@@ -2297,7 +2423,7 @@
 
                 ctx.fillStyle = '#64748b';
                 ctx.font = '500 13px sans-serif';
-                ctx.fillText('Estd. 2018 \u00b7 Affiliated to CBSE Pattern', 400, 125);
+                ctx.fillText('Estd. 2015 \u00b7 Affiliated to CBSE Pattern', 400, 125);
 
                 // 4. White Card Body Container
                 ctx.fillStyle = '#ffffff';
@@ -2532,7 +2658,7 @@
 
                 ctx.fillStyle = '#64748b';
                 ctx.font = 'bold 11px sans-serif';
-                ctx.fillText('Piro, Bhojpur: Piro, Bhojpur, Bihar, Bihar, India \u2022 Contact: +91 9123456789', 160, 95);
+                ctx.fillText('Baluwahi Tola, Barauli, Piro, Bhojpur, Bihar \u2022 Contact: +91 9471911451', 160, 95);
                 ctx.fillText('Secure Digital Admission Desk \u2022 Year of Admission: 2026-2027', 160, 115);
 
                 // Verification Badge
@@ -3016,144 +3142,132 @@
             });
         };
 
-        const Nav = ({ page, go, onDownloadClick, isPwaInstalled }) => {
+        const HERO_IMAGES = [
+            'http://rlspublicschool.in/assets/images/5e9b3231294c39.57902661.jpg',
+            'http://rlspublicschool.in/assets/images/6053fd1e98cb96.40885111.jpg',
+            'http://rlspublicschool.in/assets/images/68d241561ea7b1.51285988.jpg',
+            'http://rlspublicschool.in/assets/images/6053fc2f44b019.74126295.jpg',
+            'http://rlspublicschool.in/assets/images/646f7d37d82e37.17170781.jpg',
+            'http://rlspublicschool.in/assets/images/646f7fface93c4.20862286.jpg',
+            './building.png'
+        ];
+
+        const Nav = ({ page, go }) => {
             const [sc, setSc] = useState(false);
-            const [showTip, setShowTip] = useState(() => !localStorage.getItem('bdms_tip_dismissed'));
+            const [isOpen, setIsOpen] = useState(false);
             useEffect(() => {
                 const h = () => setSc(window.scrollY > 50);
                 window.addEventListener('scroll', h, { passive: true });
-                // Auto-dismiss tutorial after 8 seconds
-                const timer = setTimeout(() => setShowTip(false), 8000);
-                return () => { window.removeEventListener('scroll', h); clearTimeout(timer); };
+                return () => { window.removeEventListener('scroll', h); };
             }, []);
 
-            const dismissTip = () => {
-                localStorage.setItem('bdms_tip_dismissed', 'true');
-                setShowTip(false);
-            };
-
-            return e('nav', { className: 'fixed top-0 left-0 right-0 z-50 px-3 py-3 md:px-6 md:py-5' },
-                e('div', { className: 'max-w-6xl mx-auto' },
-                    /* Main pill navbar */
-                    e('div', { 
-                        className: 'flex justify-between items-center px-4 py-2 rounded-full transition-all duration-300',
-                        style: { 
-                            background: sc ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.45)',
-                            backdropFilter: 'blur(24px)',
-                            border: '1px solid rgba(255, 255, 255, 0.6)',
-                            boxShadow: sc 
-                                ? '0 12px 32px rgba(15, 23, 42, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 8px 16px rgba(255, 255, 255, 0.2)' 
-                                : '0 8px 32px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 6px 12px rgba(255, 255, 255, 0.15)'
-                        }
-                    },
-                        /* Logo + Text Branding */
-                        e('div', { className: 'flex items-center gap-2.5 cursor-pointer pl-2', onClick: () => go('home') },
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' }),
-                            e('div', null,
-                                e('span', { className: 'text-sm font-extrabold tracking-tight text-slate-900 block leading-none' }, 'BD MODERN'),
-                                e('span', { className: 'text-[9px] font-bold uppercase tracking-widest text-sky-600' }, 'Piro, Bhojpur, Bihar')
-                            )
-                        ),
-                        /* Desktop Links */
-                        e('div', { className: 'hidden md:flex items-center gap-1' },
-                            ['Home', 'Admissions', 'Fees', 'Contact'].map(l =>
-                                e('button', { 
-                                    key: l, 
-                                    onClick: () => go(l.toLowerCase()), 
-                                    className: 'px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-200',
-                                    style: {
-                                        color: page === l.toLowerCase() ? '#0f172a' : 'rgba(15, 23, 42, 0.5)',
-                                        background: page === l.toLowerCase() ? 'rgba(0,0,0,0.05)' : 'transparent'
-                                    }
-                                }, l)
-                            )
-                        ),
-                        /* Student Portal Button — Premium Radial Pill */
-                        e('button', { 
-                            onClick: () => go('portal'),
-                            className: 'hidden md:flex portal-home-btn text-xs uppercase transition-all'
-                        }, 
-                            e('div', { className: 'portal-home-blob' }),
-                            e('div', { className: 'portal-home-inner font-extrabold' }, 
-                                e(Icon, { n: 'layout-dashboard', size: 14, cls: 'text-white' }),
-                                'Student Portal'
-                            )
-                        ),
-                        /* Mobile-only: Download button with tutorial callout */
-                        !isPwaInstalled && e('div', { className: 'md:hidden flex items-center relative' }, [
-                            /* Tutorial callout bubble — shows for 8s on first visit */
-                            showTip && e('div', {
-                                key: 'tip',
-                                onClick: dismissTip,
-                                style: {
-                                    position: 'absolute',
-                                    right: '48px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    animation: 'pwa-tip-in 0.4s cubic-bezier(0.34,1.56,0.64,1) both',
-                                    zIndex: 100,
-                                    cursor: 'pointer'
-                                }
-                            }, [
-                                /* Tooltip card */
-                                e('div', {
-                                    style: {
-                                        background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
-                                        borderRadius: '16px',
-                                        padding: '10px 13px',
-                                        boxShadow: '0 8px 24px rgba(14,165,233,0.35), 0 2px 8px rgba(0,0,0,0.1)',
-                                        whiteSpace: 'nowrap',
-                                        position: 'relative'
-                                    }
-                                }, [
-                                    /* Text */
-                                    e('p', { style: { fontSize: '11px', fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.3 } }, '⬇ Tap to Download App'),
-                                    e('p', { style: { fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.8)', margin: '2px 0 0', letterSpacing: '0.04em' } }, 'INSTALL R.L.S. Public School ON YOUR PHONE'),
-                                    /* Arrow pointing right */
-                                    e('div', {
+            return e('div', { className: 'relative' }, [
+                e('nav', { className: 'fixed top-0 left-0 right-0 z-50 px-3 py-3 md:px-6 md:py-5' },
+                    e('div', { className: 'max-w-6xl mx-auto' },
+                        /* Main pill navbar */
+                        e('div', { 
+                            className: 'flex justify-between items-center px-4 py-2 rounded-full transition-all duration-300',
+                            style: { 
+                                background: sc ? 'rgba(255, 255, 255, 0.65)' : 'rgba(255, 255, 255, 0.45)',
+                                backdropFilter: 'blur(24px)',
+                                border: '1px solid rgba(255, 255, 255, 0.6)',
+                                boxShadow: sc 
+                                    ? '0 12px 32px rgba(15, 23, 42, 0.08), inset 0 0 0 1px rgba(255, 255, 255, 0.6), inset 0 8px 16px rgba(255, 255, 255, 0.2)' 
+                                    : '0 8px 32px rgba(15, 23, 42, 0.04), inset 0 0 0 1px rgba(255, 255, 255, 0.45), inset 0 6px 12px rgba(255, 255, 255, 0.15)'
+                            }
+                        }, [
+                            /* Logo + Text Branding */
+                            e('div', { className: 'flex items-center gap-2.5 cursor-pointer pl-2', onClick: () => go('home') },
+                                e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' }),
+                                e('div', null,
+                                    e('span', { className: 'text-sm font-extrabold tracking-tight text-slate-900 block leading-none' }, 'BD MODERN'),
+                                    e('span', { className: 'text-[9px] font-bold uppercase tracking-widest text-sky-600' }, 'Piro, Bhojpur, Bihar')
+                                )
+                            ),
+                            /* Desktop Links */
+                            e('div', { className: 'hidden md:flex items-center gap-1' },
+                                [['Home','home'], ['About','about'], ['Courses','courses'], ['Gallery','gallery'], ['Events','events'], ['Fees','fees'], ['Careers','careers'], ['Contact','contact']].map(([l,id]) =>
+                                    e('button', { 
+                                        key: l, 
+                                        onClick: () => go(id), 
+                                        className: 'px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all duration-200',
                                         style: {
-                                            position: 'absolute',
-                                            right: '-7px',
-                                            top: '50%',
-                                            transform: 'translateY(-50%)',
-                                            width: 0,
-                                            height: 0,
-                                            borderTop: '7px solid transparent',
-                                            borderBottom: '7px solid transparent',
-                                            borderLeft: '8px solid #6366f1'
+                                            color: page === id ? '#0f172a' : 'rgba(15, 23, 42, 0.5)',
+                                            background: page === id ? 'rgba(0,0,0,0.05)' : 'transparent'
                                         }
-                                    })
-                                ])
-                            ]),
-                            /* Download button with pulsing ring */
+                                    }, l)
+                                )
+                            ),
+                            /* Student Portal Button — Premium Radial Pill */
+                            e('button', { 
+                                onClick: () => go('portal'),
+                                className: 'hidden md:flex portal-home-btn text-xs uppercase transition-all'
+                            }, 
+                                e('div', { className: 'portal-home-blob' }),
+                                e('div', { className: 'portal-home-inner font-extrabold' }, 
+                                    e(Icon, { n: 'layout-dashboard', size: 14, cls: 'text-white' }),
+                                    'Student Portal'
+                                )
+                            ),
+                            /* Mobile Menu Toggle (Three Lines / Hamburger) */
                             e('button', {
-                                key: 'dl-btn',
-                                onClick: () => { dismissTip(); onDownloadClick(); },
-                                style: { position: 'relative' },
-                                className: 'w-9 h-9 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all',
-                                title: 'Download R.L.S. Public School App'
-                            }, [
-                                e(Icon, { n: 'download', size: 15, cls: 'text-white relative z-10' }),
-                                /* Animated ping ring */
-                                showTip && e('span', {
-                                    key: 'ping',
-                                    className: 'absolute inset-0 rounded-full bg-sky-400 animate-ping',
-                                    style: { opacity: 0.55 }
-                                })
-                            ])
+                                onClick: () => setIsOpen(!isOpen),
+                                className: 'md:hidden w-10 h-10 rounded-full flex items-center justify-center bg-slate-950/5 hover:bg-slate-950/10 active:scale-90 transition-all text-slate-800',
+                                title: 'Menu'
+                            }, e(Icon, { n: isOpen ? 'x' : 'menu', size: 18 }))
                         ])
                     )
-                )
-            );
+                ),
+                /* Mobile Menu Dropdown Drawer */
+                isOpen && e('div', { 
+                    className: 'md:hidden fixed inset-x-3 top-20 bg-white/90 backdrop-blur-xl rounded-[2rem] border border-white/60 p-6 shadow-2xl z-50 animate-in slide-in-from-top-4 duration-300 flex flex-col gap-4',
+                    style: { position: 'fixed' }
+                }, [
+                    e('div', { className: 'text-left mb-2' }, [
+                        e('span', { className: 'text-[9px] font-black text-sky-600 uppercase tracking-widest' }, 'School Directory'),
+                        e('h4', { className: 'text-lg font-black text-slate-800' }, 'All Sections')
+                    ]),
+                    e('div', { className: 'grid grid-cols-2 gap-3' }, 
+                        [
+                            { l: 'Home', id: 'home', icon: 'home', color: 'sky' },
+                            { l: 'About Us', id: 'about', icon: 'info', color: 'indigo' },
+                            { l: 'Courses', id: 'courses', icon: 'book-open', color: 'violet' },
+                            { l: 'Gallery', id: 'gallery', icon: 'image', color: 'rose' },
+                            { l: 'Events', id: 'events', icon: 'star', color: 'amber' },
+                            { l: 'Fees', id: 'fees', icon: 'wallet', color: 'emerald' },
+                            { l: 'Careers', id: 'careers', icon: 'briefcase', color: 'teal' },
+                            { l: 'Contact', id: 'contact', icon: 'map-pin', color: 'purple' },
+                            { l: 'Videos', id: 'videos', icon: 'video', color: 'pink' }
+                        ].map(item => 
+                            e('button', {
+                                key: item.id,
+                                onClick: () => { go(item.id); setIsOpen(false); },
+                                className: 'flex items-center gap-3 p-3 bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all rounded-xl border border-slate-100 text-left cursor-pointer'
+                            }, [
+                                e('div', { className: `w-8 h-8 rounded-lg bg-${item.color}-50 text-${item.color}-500 flex items-center justify-center shadow-inner` }, e(Icon, { n: item.icon, size: 14 })),
+                                e('span', { className: 'text-xs font-bold text-slate-800' }, item.l)
+                            ])
+                        )
+                    ),
+                    /* Student Portal Quick CTA in Mobile Drawer */
+                    e('button', {
+                        onClick: () => { go('portal'); setIsOpen(false); },
+                        className: 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-black text-xs hover:shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2 shadow-md shadow-sky-500/10'
+                    }, [
+                        e(Icon, { n: 'layout-dashboard', size: 14, cls: 'text-white' }),
+                        'Student Portal Dashboard'
+                    ])
+                ])
+            ]);
         };
 
         const BottomNav = ({ page, go }) => {
             const tabs = [
-                { id: 'home', icon: 'home' },
-                { id: 'admissions', icon: 'file-text' },
-                { id: 'portal', icon: 'user', center: true },
-                { id: 'fees', icon: 'wallet' },
-                { id: 'contact', icon: 'map-pin' }
+                { id: 'home', icon: 'home', label: 'Home' },
+                { id: 'admissions', icon: 'user-plus', label: 'Admissions' },
+                { id: 'portal', icon: 'user', center: true, label: 'Portal' },
+                { id: 'gallery', icon: 'image', label: 'Gallery' },
+                { id: 'contact', icon: 'map-pin', label: 'Contact' }
             ];
 
             return e('div', { className: 'md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50' },
@@ -3764,22 +3878,7 @@
         };
 
         const FeesPage = ({ go }) => {
-            const wingFees = {
-                junior: [
-                    { item: 'Monthly Tuition Fee', amt: '₹1,500' },
-                    { item: 'Annual Activity Fee', amt: '₹2,000' },
-                    { item: 'Midterm Examination Fee', amt: '₹500' },
-                    { item: 'Science & Lab Fee', amt: '₹300' }
-                ],
-                senior: [
-                    { item: 'Monthly Tuition Fee', amt: '₹2,200' },
-                    { item: 'Annual Activity Fee', amt: '₹2,500' },
-                    { item: 'Midterm Examination Fee', amt: '₹750' },
-                    { item: 'Science & Lab Fee', amt: '₹800' }
-                ]
-            };
-
-            const [selectedWing, setSelectedWing] = useState('junior');
+            const [selectedSchoolTab, setSelectedSchoolTab] = useState('rls');
             const [mockReceipts, setMockReceipts] = useState(() => {
                 const saved = localStorage.getItem('bdms_simulated_receipts');
                 if (saved) return JSON.parse(saved);
@@ -4032,34 +4131,70 @@
                     e('div', { className: 'grid md:grid-cols-3 gap-6 items-start' }, [
                         e('div', { className: 'md:col-span-1 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm space-y-6' }, [
                             e('div', null, [
-                                e('p', { className: 'text-[8.5px] font-black text-slate-400 uppercase tracking-wider' }, 'Select Academic Wing'),
-                                e('h3', { className: 'text-sm font-black text-slate-800 uppercase tracking-widest mt-1' }, 'Wing Selector')
+                                e('p', { className: 'text-[8.5px] font-black text-slate-400 uppercase tracking-wider' }, 'Select Institution Wing'),
+                                e('h3', { className: 'text-sm font-black text-slate-800 uppercase tracking-widest mt-1' }, 'Fee Structure Toggle')
                             ]),
                             e('div', { className: 'flex flex-col gap-2' }, [
                                 e('button', { 
-                                    onClick: () => setSelectedWing('junior'), 
-                                    className: `px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${selectedWing === 'junior' ? 'bg-sky-500 text-white border-sky-600 shadow shadow-sky-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'}` 
-                                }, 'Junior Wing (Nur-3)'),
+                                    onClick: () => setSelectedSchoolTab('rls'), 
+                                    className: `px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${selectedSchoolTab === 'rls' ? 'bg-sky-500 text-white border-sky-600 shadow shadow-sky-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'}` 
+                                }, 'R.L.S. Public School (AY 2022-23)'),
                                 e('button', { 
-                                    onClick: () => setSelectedWing('senior'), 
-                                    className: `px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${selectedWing === 'senior' ? 'bg-sky-500 text-white border-sky-600 shadow shadow-sky-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'}` 
-                                }, 'Senior Wing (4-10)')
+                                    onClick: () => setSelectedSchoolTab('kidzee'), 
+                                    className: `px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${selectedSchoolTab === 'kidzee' ? 'bg-rose-500 text-white border-rose-600 shadow shadow-rose-500/10' : 'bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200'}` 
+                                }, 'Kidzee Play School')
                             ])
                         ]),
 
-                        e('div', { className: 'md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm' }, [
-                            e('h3', { className: 'text-base font-black text-slate-800 mb-6 uppercase tracking-wider border-b border-slate-50 pb-3' }, 
-                                selectedWing === 'junior' ? 'Junior Wing Fee Schedule' : 'Senior Wing Fee Schedule'
-                            ),
-                            e('div', { className: 'space-y-4' }, 
-                                wingFees[selectedWing].map(item => 
-                                    e('div', { key: item.item, className: 'flex justify-between items-center border-b border-slate-50 pb-3' }, [
-                                        e('p', { className: 'text-sm font-bold text-slate-700' }, item.item),
-                                        e('span', { className: 'px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-600 text-xs font-black' }, item.amt)
-                                    ])
-                                )
-                            )
-                        ])
+                        selectedSchoolTab === 'rls' 
+                            ? e('div', { className: 'md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm overflow-x-auto text-left' }, [
+                                e('h3', { className: 'text-base font-black text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-50 pb-3' }, 'R.L.S. Public School Fee Schedule'),
+                                e('table', { className: 'w-full text-left border-collapse text-xs' }, [
+                                    e('thead', null, 
+                                        e('tr', { className: 'border-b border-slate-100' }, [
+                                            e('th', { className: 'py-3 font-bold text-slate-400 uppercase tracking-wider w-[35%]' }, 'Fee Component'),
+                                            e('th', { className: 'py-3 font-bold text-slate-400 uppercase tracking-wider w-[20%]' }, 'Frequency'),
+                                            ...RLS_FEE_STRUCTURE.categories.map(cat => 
+                                                e('th', { key: cat, className: 'py-3 font-black text-sky-600 uppercase tracking-wider text-right' }, cat)
+                                            )
+                                        ])
+                                    ),
+                                    e('tbody', { className: 'divide-y divide-slate-50' }, 
+                                        RLS_FEE_STRUCTURE.fees.map(fee => {
+                                            const isTotal = fee.frequency === 'Total';
+                                            return e('tr', { key: fee.name, className: isTotal ? 'bg-sky-50/50 font-black' : 'hover:bg-slate-50/30' }, [
+                                                e('td', { className: 'py-3 font-bold text-slate-700' }, fee.name),
+                                                e('td', { className: 'py-3 text-slate-400 font-medium' }, fee.frequency),
+                                                ...fee.amounts.map((amt, idx) => 
+                                                    e('td', { key: idx, className: `py-3 text-right font-black ${isTotal ? 'text-sky-600 text-sm' : 'text-slate-800'}` }, `₹${amt.toLocaleString('en-IN')}`)
+                                                )
+                                            ]);
+                                        })
+                                    )
+                                ])
+                            ])
+                            : e('div', { className: 'md:col-span-2 bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm overflow-x-auto text-left' }, [
+                                e('h3', { className: 'text-base font-black text-rose-600 mb-4 uppercase tracking-wider border-b border-slate-50 pb-3' }, 'Kidzee Play School Fee Schedule'),
+                                e('table', { className: 'w-full text-left border-collapse text-xs' }, [
+                                    e('thead', null, 
+                                        e('tr', { className: 'border-b border-slate-100' }, [
+                                            e('th', { className: 'py-3 font-bold text-slate-400 uppercase tracking-wider w-[40%]' }, 'Fee Component'),
+                                            e('th', { className: 'py-3 font-bold text-slate-400 uppercase tracking-wider w-[30%]' }, 'Frequency'),
+                                            e('th', { className: 'py-3 font-black text-rose-500 uppercase tracking-wider text-right' }, 'Amount')
+                                        ])
+                                    ),
+                                    e('tbody', { className: 'divide-y divide-slate-50' }, 
+                                        RLS_KIDZEE_FEE_STRUCTURE.fees.map(fee => {
+                                            const isTotal = fee.frequency === 'Total';
+                                            return e('tr', { key: fee.name, className: isTotal ? 'bg-rose-50/50 font-black' : 'hover:bg-slate-50/30' }, [
+                                                e('td', { className: 'py-3 font-bold text-slate-700' }, fee.name),
+                                                e('td', { className: 'py-3 text-slate-400 font-medium' }, fee.frequency),
+                                                e('td', { className: `py-3 text-right font-black ${isTotal ? 'text-rose-600 text-sm' : 'text-slate-800'}` }, `₹${fee.amount.toLocaleString('en-IN')}`)
+                                            ]);
+                                        })
+                                    )
+                                ])
+                            ])
                     ]),
 
                     // Search & Filter controls container
@@ -4144,7 +4279,7 @@
                             // Header
                             e('div', { className: 'flex justify-between items-center border-b border-slate-100 pb-4 mb-6' }, [
                                 e('div', { className: 'flex items-center gap-2' }, [
-                                    e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Logo', className: 'w-7 h-7 object-contain shrink-0' }),
+                                    e('img', { src: './logo.png', alt: 'R.L.S. Logo', className: 'w-7 h-7 object-contain shrink-0' }),
                                     e('span', { className: 'text-xs font-black tracking-widest text-slate-800 uppercase' }, 'Secure Pay Gateway')
                                 ]),
                                 paymentStep !== 'processing' && e('button', { onClick: () => setShowPayModal(false), className: 'text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer' }, e(Icon, { n: 'x', size: 20 }))
@@ -4272,7 +4407,7 @@
                         e('div', { className: 'bg-white max-w-md w-full p-8 rounded-[2.5rem] border border-sky-100 shadow-2xl relative overflow-hidden flex flex-col text-slate-800' }, [
                             e('div', { className: 'flex justify-between items-center border-b border-slate-100 pb-4 mb-6' }, [
                                 e('div', { className: 'flex items-center gap-2' }, [
-                                    e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
+                                    e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
                                     e('span', { className: 'text-xs font-black tracking-widest text-slate-800 uppercase' }, 'R.L.S. Public School RECEIPT')
                                 ]),
                                 e('button', { onClick: () => setActivePreviewReceipt(null), className: 'text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer' }, e(Icon, { n: 'x', size: 20 }))
@@ -4326,21 +4461,743 @@
             );
         };
 
+        const RLS_VIDEOS = [
+            { id: 'cIM_as3ML90', title: 'School Campus Tour & Assembly', desc: 'A detailed visual tour of our modern state-of-the-art campus, classrooms, assembly grounds, and science facilities.', category: 'Campus Tour' },
+            { id: 'm1sarK7SAJ4', title: 'Annual Day Celebrations & Cultural Dance', desc: 'Vibrant cultural performances, speech sessions, and folk dance choreographed by our creative faculty during the Annual Award Function.', category: 'Annual Day' },
+            { id: 'v98O6c9GjBw', title: 'Independence Day Ceremony', desc: 'Flag hoisting ceremony, speech by Principal Dinesh Kumar Singh, and patriotic assemblies celebrating our national heritage.', category: 'Celebrations' },
+            { id: 'zoQv40Be4z4', title: 'Republic Day Parade & Group Songs', desc: 'Patriotic song recitations, physical exercises, and smart student marching parade during Republic Day celebrations.', category: 'Celebrations' },
+            { id: 'gbfkd6X8mW8', title: 'Smart Classroom & Interactive Learning', desc: 'Witness modern multimedia visual lectures and smart screen interactive lessons implemented across classes.', category: 'Academics' },
+            { id: 'MVLscOcegeA', title: 'Kidzee Play School Activities', desc: 'Explore the colorful environment, games, and playful activity-based teaching methodology at our Kidzee wing.', category: 'Kidzee' },
+            { id: 'yF05eaGx84U', title: 'Annual Sports Day Highlights', desc: 'Relive the high-spirited race competitions, high jumps, tug-of-war, and athletic award ceremonies.', category: 'Sports' },
+            { id: 'H35ZFcs0OrU', title: 'Science & Art Exhibition', desc: 'Inspiring visual models, self-designed electronic systems, and organic biology projects presented by senior school students.', category: 'Exhibition' }
+        ];
+
+        const VideosPage = ({ go }) => {
+            const [activeCategory, setActiveCategory] = useState('All');
+            const categories = ['All', 'Campus Tour', 'Academics', 'Celebrations', 'Kidzee', 'Sports', 'Exhibition'];
+
+            const filteredVideos = activeCategory === 'All' 
+                ? RLS_VIDEOS 
+                : RLS_VIDEOS.filter(v => v.category === activeCategory);
+
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' }, 
+                e('div', { className: 'max-w-7xl mx-auto space-y-8' }, [
+                    e('div', { className: 'flex flex-col md:flex-row md:items-end justify-between gap-4' }, [
+                        e('div', null, [
+                            e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'School Media Gallery'),
+                            e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-1' }, 'Video Gallery & Highlights'),
+                            e('p', { className: 'text-slate-500 text-sm mt-2' }, 'Take a visual journey through our campus tours, classroom learning sessions, and vibrant annual celebrations.')
+                        ]),
+                        e('button', { 
+                            onClick: () => go('home'), 
+                            className: 'self-start flex items-center gap-2 px-5 py-3 clay-btn rounded-xl text-xs font-black uppercase text-slate-700 hover:text-sky-600 tracking-wider bg-white' 
+                        }, [
+                            e(Icon, { n: 'arrow-left', size: 14 }), 'Back to Home'
+                        ])
+                    ]),
+
+                    // HSL/Tailored Premium Filter Tabs (Claymorphic Style)
+                    e('div', { className: 'flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none' }, 
+                        categories.map(cat => 
+                            e('button', { 
+                                key: cat,
+                                onClick: () => setActiveCategory(cat),
+                                className: `px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap border shrink-0 ${activeCategory === cat ? 'bg-sky-500 text-white border-sky-600 shadow shadow-sky-500/10' : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-200'}`
+                            }, cat)
+                        )
+                    ),
+
+                    // Videos Responsive Grid
+                    e('div', { className: 'grid md:grid-cols-2 lg:grid-cols-3 gap-8' }, 
+                        filteredVideos.map(video => 
+                            e('div', { key: video.id, className: 'bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col hover:shadow-lg transition-shadow duration-300' }, [
+                                // Youtube Iframe Container
+                                e('div', { className: 'relative w-full aspect-video bg-slate-900 border-b border-slate-50 overflow-hidden' }, 
+                                    e('iframe', {
+                                        src: `https://www.youtube.com/embed/${video.id}?rel=0&modestbranding=1`,
+                                        className: 'absolute inset-0 w-full h-full border-0',
+                                        allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture',
+                                        allowFullScreen: true
+                                    })
+                                ),
+                                // Text details block
+                                e('div', { className: 'p-6 flex-1 flex flex-col justify-between gap-4 text-left' }, [
+                                    e('div', { className: 'space-y-2' }, [
+                                        e('span', { className: 'inline-flex px-3 py-1 rounded-full bg-sky-50 border border-sky-100 text-sky-600 text-[9px] font-black uppercase tracking-widest' }, video.category),
+                                        e('h3', { className: 'text-sm font-black text-slate-800 tracking-tight leading-tight line-clamp-1' }, video.title)
+                                    ]),
+                                    e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed line-clamp-3' }, video.desc)
+                                ])
+                            ])
+                        )
+                    )
+                ])
+            );
+        };
+
+        // ===================== ABOUT PAGE =====================
+        const AboutPage = ({ go }) => {
+            const [activeTab, setActiveTab] = useState('vision');
+            const tabs = [
+                { id: 'vision', label: 'Our Vision', icon: 'eye' },
+                { id: 'mission', label: 'Our Mission', icon: 'target' },
+                { id: 'values', label: 'Core Values', icon: 'heart' },
+                { id: 'identity', label: 'School Profile', icon: 'info' }
+            ];
+            const tabContent = {
+                vision: {
+                    heading: 'Our Vision',
+                    text: 'Our vision at R.L.S. Public School is to empower students to acquire, demonstrate, articulate and value knowledge and skills that will support them, as life-long learners, to participate in and contribute to the global world and practise the core values of the school: respect, tolerance & inclusion, and excellence.',
+                    points: []
+                },
+                mission: {
+                    heading: 'Our Mission',
+                    text: 'To enable all learners\' access to learning through the provision of:',
+                    points: [
+                        'Differentiated, in-depth and cohesive learning programs aligned to year level content and achievement standards',
+                        'Highly effective teachers, focussed on improving student outcomes, through their commitment to ongoing professional development, quality teaching, evidence based practices, coaching and mentoring and collaboration',
+                        'A quality inclusive learning environment that is responsive to student voice',
+                        'Enriching, engaging resources',
+                        'Opportunities for community and parents to participate in learning and decision making partnerships'
+                    ]
+                },
+                values: {
+                    heading: 'Core Values',
+                    text: 'Our school is guided by three fundamental values that shape every aspect of our educational environment and community culture.',
+                    points: [
+                        'Respect — Treating every student, teacher, parent and community member with dignity and honour',
+                        'Tolerance & Inclusion — Celebrating diversity and creating a safe, welcoming environment for all learners',
+                        'Excellence — Pursuing the highest academic and personal standards in everything we do'
+                    ]
+                },
+                identity: {
+                    heading: 'School Profile',
+                    text: 'R.L.S. Public School is a premier CBSE-affiliated English-medium institution located in Piro, Bhojpur, Bihar. Managed by the Indrasani Devi Educational Society, we offer comprehensive education from Nursery to Class XII.',
+                    points: [
+                        'Managing Society: Indrasani Devi Educational Society',
+                        'Principal: Dinesh Kumar Singh',
+                        'CBSE Affiliation No.: 330862',
+                        'School Code: 65860',
+                        'Type: Co-Educational English Medium',
+                        'Classes: Nursery to Class XII (Senior Secondary +2 Level)',
+                        'Established: 2015',
+                        'PIN Code: 802207',
+                        'Rating: 4.6/5 (Justdial)'
+                    ]
+                }
+            };
+            const stats = [
+                { v: '1,180+', l: 'Students Enrolled', i: 'users', c: 'sky' },
+                { v: '35+', l: 'Expert Teachers', i: 'book-open', c: 'indigo' },
+                { v: '32+', l: 'Support Staff', i: 'briefcase', c: 'emerald' },
+                { v: '2015', l: 'Year Founded', i: 'calendar', c: 'amber' }
+            ];
+            const facilities = [
+                { name: 'Smart Classrooms', desc: 'Modern multimedia visual lectures for all students', icon: 'monitor' },
+                { name: 'Science Laboratories', desc: 'Fully equipped labs for practical learning', icon: 'flask-conical' },
+                { name: 'Library', desc: 'Resourceful library with extensive book collection', icon: 'library' },
+                { name: 'Sports Infrastructure', desc: 'Comprehensive sports grounds and facilities', icon: 'dumbbell' },
+                { name: 'Transport', desc: 'Safe and reliable school transportation service', icon: 'bus' },
+                { name: 'Conference Hall', desc: 'Modern hall for Parent-Management Meetings', icon: 'presentation' }
+            ];
+            const active = tabContent[activeTab];
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' },
+                e('div', { className: 'max-w-7xl mx-auto space-y-16' }, [
+
+                    // Hero Header
+                    e('div', { className: 'grid md:grid-cols-2 gap-12 items-center' }, [
+                        e('div', null, [
+                            e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'About R.L.S. Public School'),
+                            e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-2 leading-tight' }, 'A Tradition of ', e('span', { className: 'text-sky-600 italic' }, 'Excellence')),
+                            e('p', { className: 'text-slate-600 mt-4 leading-relaxed' }, 'Founded in 2015 in the heart of Piro, Bhojpur, R.L.S. Public School is dedicated to fostering a learning environment where academic rigor meets holistic character development. We are proud to be CBSE affiliated and serve over 1,180 students from Nursery to Class XII.'),
+                            e('p', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4' }, 'Managed by Indrasani Devi Educational Society'),
+                            e('div', { className: 'flex flex-wrap gap-3 mt-6' }, [
+                                e('div', { className: 'px-4 py-2 bg-sky-50 border border-sky-100 rounded-xl text-xs font-black text-sky-600 uppercase tracking-wider' }, 'CBSE Affiliated'),
+                                e('div', { className: 'px-4 py-2 bg-slate-100 rounded-xl text-xs font-black text-slate-600 uppercase tracking-wider' }, 'Aff. No. 330862'),
+                                e('div', { className: 'px-4 py-2 bg-slate-100 rounded-xl text-xs font-black text-slate-600 uppercase tracking-wider' }, 'Code: 65860')
+                            ])
+                        ]),
+                        e('div', { className: 'relative' }, [
+                            e('div', { className: 'absolute inset-0 bg-sky-200 rounded-[2.5rem] transform -rotate-2 scale-105 opacity-40' }),
+                            e('img', { src: 'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg', alt: 'R.L.S. Public School Campus', className: 'relative z-10 w-full h-72 md:h-96 object-cover rounded-[2rem] shadow-xl' })
+                        ])
+                    ]),
+
+                    // Stats Row
+                    e('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-4' },
+                        stats.map(s => e('div', { key: s.l, className: 'bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm text-center' }, [
+                            e('div', { className: `text-3xl font-black text-${s.c}-500 mb-1` }, s.v),
+                            e('p', { className: 'text-xs font-bold text-slate-500 uppercase tracking-wider' }, s.l)
+                        ]))
+                    ),
+
+                    // Vision / Mission / Values Tabs
+                    e('div', { className: 'bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden' }, [
+                        e('div', { className: 'flex overflow-x-auto border-b border-slate-100' },
+                            tabs.map(tab => e('button', {
+                                key: tab.id,
+                                onClick: () => setActiveTab(tab.id),
+                                className: `flex-shrink-0 px-6 py-4 text-xs font-black uppercase tracking-wider transition-all border-b-2 ${activeTab === tab.id ? 'border-sky-500 text-sky-600 bg-sky-50/50' : 'border-transparent text-slate-500 hover:text-slate-800'}`
+                            }, tab.label))
+                        ),
+                        e('div', { className: 'p-8' }, [
+                            e('h2', { className: 'text-2xl font-black text-slate-900 mb-4' }, active.heading),
+                            e('p', { className: 'text-slate-600 leading-relaxed mb-4' }, active.text),
+                            active.points.length > 0 && e('ul', { className: 'space-y-3' },
+                                active.points.map((pt, i) => e('li', { key: i, className: 'flex items-start gap-3' }, [
+                                    e('div', { className: 'w-5 h-5 bg-sky-50 border border-sky-100 text-sky-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5' }, e(Icon, { n: 'check', size: 11 })),
+                                    e('p', { className: 'text-sm text-slate-600 font-medium leading-relaxed' }, pt)
+                                ]))
+                            )
+                        ])
+                    ]),
+
+                    // Facilities Grid
+                    e('div', null, [
+                        e('div', { className: 'text-center mb-8' }, [
+                            e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'World-Class Infrastructure'),
+                            e('h2', { className: 'text-3xl font-black text-slate-900 mt-1' }, 'Our Facilities')
+                        ]),
+                        e('div', { className: 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                            facilities.map(f => e('div', { key: f.name, className: 'bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm flex gap-4 items-start' }, [
+                                e('div', { className: 'w-12 h-12 bg-sky-50 border border-sky-100 text-sky-500 rounded-2xl flex items-center justify-center flex-shrink-0' }, e(Icon, { n: f.icon, size: 20 })),
+                                e('div', null, [
+                                    e('h3', { className: 'font-black text-slate-800 text-sm' }, f.name),
+                                    e('p', { className: 'text-xs text-slate-500 font-medium mt-1 leading-relaxed' }, f.desc)
+                                ])
+                            ]))
+                        )
+                    ]),
+
+                    // Principal's Banner
+                    e('div', { className: 'bg-[#0f172a] rounded-[2.5rem] p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden' }, [
+                        e('div', { className: 'absolute top-0 right-0 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl' }),
+                        e('div', { className: 'w-24 h-24 bg-sky-500/20 border border-sky-500/30 rounded-full flex items-center justify-center flex-shrink-0 relative z-10' }, e(Icon, { n: 'user', size: 40, cls: 'text-sky-400' })),
+                        e('div', { className: 'relative z-10 text-white text-center md:text-left' }, [
+                            e('p', { className: 'text-[9px] font-black text-sky-400 uppercase tracking-widest mb-2' }, "Principal's Message"),
+                            e('p', { className: 'text-lg md:text-xl font-bold italic leading-relaxed text-slate-200' }, '"A community with high expectation and high academic achievement."'),
+                            e('p', { className: 'text-sm font-black text-sky-400 mt-4' }, 'Dinesh Kumar Singh'),
+                            e('p', { className: 'text-xs text-slate-500 font-bold uppercase tracking-wider mt-0.5' }, 'Principal, R.L.S. Public School')
+                        ])
+                    ]),
+
+                    // Location Banner
+                    e('div', { className: 'bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden' }, [
+                        e('iframe', {
+                            src: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28849.67317151216!2d84.37820748381573!3d25.330761965374762!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x398d70e8e6fbf111%3A0x522b41218818f849!2sR.L.S%20PUBLIC%20SCHOOL!5e0!3m2!1sen!2sin!4v1613057792475!5m2!1sen!2sin',
+                            width: '100%', height: '320', className: 'border-0 block', allowFullScreen: true,
+                            loading: 'lazy', referrerPolicy: 'no-referrer-when-downgrade'
+                        }),
+                        e('div', { className: 'p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4' }, [
+                            e('div', null, [
+                                e('p', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-widest' }, 'Our Location'),
+                                e('p', { className: 'font-bold text-slate-800 mt-1' }, 'Baluwahi Tola, (Barauli) Piro, Bhojpur, Bihar – 802207'),
+                            ]),
+                            e('a', { href: 'https://goo.gl/maps/RLS', target: '_blank', className: 'flex items-center gap-2 px-5 py-3 bg-sky-500 text-white rounded-xl text-xs font-black uppercase tracking-wider hover:bg-sky-400 transition-colors' },
+                                [e(Icon, { n: 'navigation', size: 14 }), 'Get Directions']
+                            )
+                        ])
+                    ])
+                ])
+            );
+        };
+
+        // ===================== COURSES PAGE =====================
+        const RLS_COURSES = [
+            { cls: 'Nursery', subjects: ['Hindi', 'English', 'Mathematics', 'Drawing'] },
+            { cls: 'L.K.G.', subjects: ['Hindi', 'English', 'Mathematics', 'Drawing'] },
+            { cls: 'U.K.G.', subjects: ['Hindi', 'English', 'Mathematics', 'Drawing', 'EVS'] },
+            { cls: 'Class I', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'EVS', 'Computer'] },
+            { cls: 'Class II', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'EVS', 'Computer'] },
+            { cls: 'Class III', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'EVS', 'Computer'] },
+            { cls: 'Class IV', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'EVS', 'Computer'] },
+            { cls: 'Class V', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'EVS', 'Computer'] },
+            { cls: 'Class VI', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'Social Studies', 'Computer'] },
+            { cls: 'Class VII', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Drawing', 'Social Studies', 'Computer'] },
+            { cls: 'Class VIII', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Social Studies', 'Computer'] },
+            { cls: 'Class IX', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Social Studies', 'Computer'] },
+            { cls: 'Class X', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Social Studies', 'Computer', 'Sanskrit'] }
+        ];
+        const SUBJECT_COLORS = {
+            'Hindi': 'rose', 'English': 'sky', 'Mathematics': 'indigo', 'Science': 'emerald',
+            'Drawing': 'amber', 'EVS': 'green', 'Computer': 'purple', 'Social Studies': 'orange',
+            'S.St': 'orange', 'Sanskrit': 'teal'
+        };
+        const CoursesPage = ({ go }) => {
+            const [activeGroup, setActiveGroup] = useState('all');
+            const groups = [
+                { id: 'all', label: 'All Classes' },
+                { id: 'pre', label: 'Pre-Primary (Nur–UKG)' },
+                { id: 'primary', label: 'Primary (I–V)' },
+                { id: 'middle', label: 'Middle (VI–VIII)' },
+                { id: 'secondary', label: 'Secondary (IX–X)' }
+            ];
+            const groupFilter = { all: () => true, pre: (c) => ['Nursery','L.K.G.','U.K.G.'].includes(c.cls), primary: (c) => ['Class I','Class II','Class III','Class IV','Class V'].includes(c.cls), middle: (c) => ['Class VI','Class VII','Class VIII'].includes(c.cls), secondary: (c) => ['Class IX','Class X'].includes(c.cls) };
+            const filtered = RLS_COURSES.filter(groupFilter[activeGroup]);
+
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' },
+                e('div', { className: 'max-w-6xl mx-auto space-y-8' }, [
+                    e('div', null, [
+                        e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'Academic Curriculum'),
+                        e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-1' }, 'Our Courses'),
+                        e('p', { className: 'text-slate-500 text-sm mt-2 max-w-2xl' }, 'Comprehensive CBSE curriculum from Nursery to Class X. All students benefit from smart class technology and experienced faculty dedicated to academic excellence.')
+                    ]),
+
+                    // Smart Class highlight banner
+                    e('div', { className: 'bg-gradient-to-r from-sky-500 to-indigo-600 rounded-[2rem] p-6 flex gap-4 items-center text-white' }, [
+                        e('div', { className: 'w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0' }, e(Icon, { n: 'monitor', size: 22, cls: 'text-white' })),
+                        e('div', null, [
+                            e('p', { className: 'font-black text-sm uppercase tracking-wider' }, 'Smart Class Enabled'),
+                            e('p', { className: 'text-sky-100 text-xs mt-0.5' }, 'Every classroom at R.L.S. Public School is equipped with Smart Class multimedia learning technology — enhancing comprehension for all subjects.')
+                        ])
+                    ]),
+
+                    // Filter Tabs
+                    e('div', { className: 'flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0' },
+                        groups.map(g => e('button', { key: g.id, onClick: () => setActiveGroup(g.id), className: `px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border flex-shrink-0 transition-all ${activeGroup === g.id ? 'bg-sky-500 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}` }, g.label))
+                    ),
+
+                    // Course Cards
+                    e('div', { className: 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                        filtered.map(course => e('div', { key: course.cls, className: 'bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow' }, [
+                            e('div', { className: 'flex items-center justify-between mb-4' }, [
+                                e('h2', { className: 'font-black text-slate-900 text-base' }, course.cls),
+                                e('span', { className: 'text-[9px] font-black text-sky-600 bg-sky-50 border border-sky-100 px-2 py-1 rounded-full uppercase tracking-wider' }, `${course.subjects.length} Subjects`)
+                            ]),
+                            e('div', { className: 'flex flex-wrap gap-2' },
+                                course.subjects.map(sub => {
+                                    const color = SUBJECT_COLORS[sub] || 'slate';
+                                    return e('span', { key: sub, className: `px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-${color}-50 text-${color}-600 border border-${color}-100` }, sub);
+                                })
+                            )
+                        ]))
+                    ),
+
+                    // Admission CTA
+                    e('div', { className: 'bg-[#0f172a] rounded-[2.5rem] p-8 text-center relative overflow-hidden' }, [
+                        e('div', { className: 'absolute inset-0 bg-gradient-to-br from-sky-500/10 to-indigo-500/5' }),
+                        e('div', { className: 'relative z-10' }, [
+                            e('p', { className: 'text-[9px] font-black text-sky-400 uppercase tracking-widest mb-2' }, 'Join R.L.S. Public School'),
+                            e('h2', { className: 'text-2xl font-black text-white mb-3' }, 'Admissions Open for 2025–26'),
+                            e('p', { className: 'text-slate-400 text-sm mb-6' }, 'Enroll your child in a CBSE-affiliated school with smart classrooms, expert faculty, and a rich co-curricular environment.'),
+                            e('button', { onClick: () => go('admissions'), className: 'px-8 py-3 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all border-none cursor-pointer' }, 'Apply for Admission')
+                        ])
+                    ])
+                ])
+            );
+        };
+
+        // ===================== GALLERY PAGE =====================
+        const RLS_GALLERY = [
+            { url: 'http://rlspublicschool.in/assets/images/5e9b3231294c39.57902661.jpg', caption: 'School Campus', category: 'Campus' },
+            { url: 'http://rlspublicschool.in/assets/images/6053fd1e98cb96.40885111.jpg', caption: 'School Celebrations', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/68d241561ea7b1.51285988.jpg', caption: 'Annual Function', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/6053fc2f44b019.74126295.jpg', caption: 'Student Activities', category: 'Activities' },
+            { url: 'http://rlspublicschool.in/assets/images/68d241c1895282.51081358.png', caption: 'School Ceremony', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/646f7d37d82e37.17170781.jpg', caption: 'Cultural Programme', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/646f7fface93c4.20862286.jpg', caption: 'Independence Day', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/68d242cb341f77.30926076.jpg', caption: 'Republic Day Parade', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/646f804dc97df1.80463924.jpg', caption: 'Award Ceremony', category: 'Activities' },
+            { url: 'http://rlspublicschool.in/assets/images/68d2426d5f4673.58097166.jpg', caption: 'School Sports Day', category: 'Sports' },
+            { url: 'http://rlspublicschool.in/assets/images/68d24593556b55.90176539.jpg', caption: 'Science Exhibition', category: 'Academics' },
+            { url: 'http://rlspublicschool.in/assets/images/68d2464d736796.48614326.jpg', caption: 'Smart Classrooms', category: 'Academics' },
+            { url: 'http://rlspublicschool.in/assets/images/691b400293b0d9.76254803.jpg', caption: 'School Assembly', category: 'Campus' },
+            { url: 'http://rlspublicschool.in/assets/images/691b40752436e3.45009539.jpg', caption: 'Cultural Day', category: 'Events' },
+            { url: 'http://rlspublicschool.in/assets/images/691b40b2a37417.99520616.jpg', caption: 'School Functions', category: 'Activities' },
+            { url: 'http://rlspublicschool.in/assets/images/692fdf7e3d7929.12795070.jpg', caption: 'School Grounds', category: 'Campus' },
+            { url: 'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg', caption: 'School Building', category: 'Campus' },
+            { url: 'http://rlspublicschool.in/assets/images/69a4f6c268d179.64618665.jpg', caption: 'About Our School', category: 'Campus' }
+        ];
+        const GalleryPage = ({ go }) => {
+            const [activeFilter, setActiveFilter] = useState('All');
+            const [lightbox, setLightbox] = useState(null);
+            const filters = ['All', 'Campus', 'Events', 'Activities', 'Sports', 'Academics'];
+            const filtered = activeFilter === 'All' ? RLS_GALLERY : RLS_GALLERY.filter(g => g.category === activeFilter);
+
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' },
+                e('div', { className: 'max-w-7xl mx-auto space-y-8' }, [
+                    e('div', null, [
+                        e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'School Photo Gallery'),
+                        e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-1' }, 'Photo Gallery'),
+                        e('p', { className: 'text-slate-500 text-sm mt-2' }, 'A visual glimpse into the vibrant life at R.L.S. Public School — campus, events, cultural programmes, and more.')
+                    ]),
+
+                    // Category Filter
+                    e('div', { className: 'flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0' },
+                        filters.map(f => e('button', { key: f, onClick: () => setActiveFilter(f), className: `px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border flex-shrink-0 transition-all ${activeFilter === f ? 'bg-sky-500 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}` }, f))
+                    ),
+
+                    // Photo Grid
+                    e('div', { className: 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4' },
+                        filtered.map((photo, idx) => e('div', {
+                            key: idx, onClick: () => setLightbox(photo),
+                            className: 'group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-slate-200 shadow-sm hover:shadow-lg transition-all hover:scale-[1.02]'
+                        }, [
+                            e('img', { src: photo.url, alt: photo.caption, className: 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105', loading: 'lazy' }),
+                            e('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3' }, [
+                                e('div', null, [
+                                    e('p', { className: 'text-white text-xs font-black' }, photo.caption),
+                                    e('span', { className: 'text-[9px] font-bold text-white/70 uppercase tracking-wider' }, photo.category)
+                                ])
+                            ])
+                        ]))
+                    ),
+
+                    // Lightbox
+                    lightbox && e('div', { className: 'fixed inset-0 bg-black/90 z-[999999] flex items-center justify-center p-4', onClick: () => setLightbox(null) }, [
+                        e('button', { className: 'absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white border-none cursor-pointer transition-colors', onClick: () => setLightbox(null) }, e(Icon, { n: 'x', size: 18 })),
+                        e('div', { className: 'max-w-4xl w-full', onClick: (ev) => ev.stopPropagation() }, [
+                            e('img', { src: lightbox.url, alt: lightbox.caption, className: 'w-full max-h-[80vh] object-contain rounded-2xl' }),
+                            e('div', { className: 'mt-4 text-center' }, [
+                                e('p', { className: 'text-white font-black' }, lightbox.caption),
+                                e('p', { className: 'text-white/60 text-xs font-bold uppercase tracking-wider mt-1' }, lightbox.category)
+                            ])
+                        ])
+                    ])
+                ])
+            );
+        };
+
+        // ===================== EVENTS PAGE =====================
+        const RLS_EVENTS = [
+            { title: 'Annual Award Function', date: 'December 2024', category: 'Annual Day', desc: 'A grand celebration of academic excellence and cultural achievements. Students are honoured with awards, trophies, and certificates for their outstanding performance throughout the year.', icon: 'award', color: 'amber', img: 'http://rlspublicschool.in/assets/images/68d241561ea7b1.51285988.jpg' },
+            { title: 'Independence Day Celebration', date: '15 August', category: 'National Day', desc: 'Flag hoisting ceremony led by Principal Dinesh Kumar Singh, followed by patriotic speeches, songs, and cultural performances by students celebrating India\'s freedom.', icon: 'flag', color: 'orange', img: 'http://rlspublicschool.in/assets/images/646f7fface93c4.20862286.jpg' },
+            { title: 'Republic Day Parade & Celebration', date: '26 January', category: 'National Day', desc: 'Smart student marching parade, patriotic song recitations, physical exercise demonstrations, and flag hoisting ceremony marking our national Republic Day.', icon: 'shield', color: 'sky', img: 'http://rlspublicschool.in/assets/images/68d242cb341f77.30926076.jpg' },
+            { title: 'Annual Sports Day', date: 'February', category: 'Sports', desc: 'High-spirited athletic competitions including 100m, 200m, 400m races, high jump, long jump, tug-of-war, relay races and team sports with champion trophies.', icon: 'trophy', color: 'emerald', img: 'http://rlspublicschool.in/assets/images/68d2426d5f4673.58097166.jpg' },
+            { title: 'Science & Art Exhibition', date: 'November', category: 'Academic', desc: 'Students showcase inspiring visual models, self-designed electronic systems, organic biology projects, and creative artwork to demonstrate classroom learning in action.', icon: 'flask-conical', color: 'indigo', img: 'http://rlspublicschool.in/assets/images/68d24593556b55.90176539.jpg' },
+            { title: 'Parent–Management Meeting', date: 'Quarterly', category: 'Community', desc: 'Regular meetings held in our modern conference hall where parents and management collaborate on school policy, student progress, and community development initiatives.', icon: 'users', color: 'purple', img: 'http://rlspublicschool.in/assets/images/5e9b3231294c39.57902661.jpg' },
+            { title: 'Cultural Celebration Days', date: 'Throughout Year', category: 'Cultural', desc: 'Vibrant cultural programmes showcasing the diverse talent of our students through folk dance, drama, music, and art performances on special occasions and festivals.', icon: 'star', color: 'rose', img: 'http://rlspublicschool.in/assets/images/646f7d37d82e37.17170781.jpg' },
+            { title: 'Workshop & Seminars', date: 'Ongoing', category: 'Academic', desc: 'Educational workshops and seminars conducted for students and staff to enhance learning outcomes, professional development, and awareness on important topics.', icon: 'book-open', color: 'teal', img: 'http://rlspublicschool.in/assets/images/68d2464d736796.48614326.jpg' }
+        ];
+        const EventsPage = ({ go }) => {
+            const [activeFilter, setActiveFilter] = useState('All');
+            const filters = ['All', 'Annual Day', 'National Day', 'Sports', 'Academic', 'Cultural', 'Community'];
+            const filtered = activeFilter === 'All' ? RLS_EVENTS : RLS_EVENTS.filter(ev => ev.category === activeFilter);
+
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' },
+                e('div', { className: 'max-w-6xl mx-auto space-y-8' }, [
+                    e('div', null, [
+                        e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'School Calendar & Activities'),
+                        e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-1' }, 'Events & Activities'),
+                        e('p', { className: 'text-slate-500 text-sm mt-2 max-w-2xl' }, 'From national celebrations to academic exhibitions and sports tournaments — R.L.S. Public School provides a rich calendar of events that shape well-rounded students.')
+                    ]),
+
+                    // Filter Bar
+                    e('div', { className: 'flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0' },
+                        filters.map(f => e('button', { key: f, onClick: () => setActiveFilter(f), className: `px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider whitespace-nowrap border flex-shrink-0 transition-all ${activeFilter === f ? 'bg-sky-500 text-white border-sky-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}` }, f))
+                    ),
+
+                    // Events Grid
+                    e('div', { className: 'grid md:grid-cols-2 gap-6' },
+                        filtered.map(ev => e('div', { key: ev.title, className: 'bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow' }, [
+                            e('div', { className: 'relative h-44 overflow-hidden' }, [
+                                e('img', { src: ev.img, alt: ev.title, className: 'w-full h-full object-cover', loading: 'lazy' }),
+                                e('div', { className: 'absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' }),
+                                e('div', { className: 'absolute bottom-3 left-4 right-4 flex items-end justify-between' }, [
+                                    e('span', { className: `text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-${ev.color}-500 text-white` }, ev.category),
+                                    e('span', { className: 'text-[9px] font-bold text-white/80 uppercase tracking-wider' }, ev.date)
+                                ])
+                            ]),
+                            e('div', { className: 'p-5' }, [
+                                e('h3', { className: 'font-black text-slate-800 text-base leading-tight' }, ev.title),
+                                e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed mt-2' }, ev.desc)
+                            ])
+                        ]))
+                    )
+                ])
+            );
+        };
+
+        // ===================== CAREERS PAGE =====================
+        const CareersPage = ({ go }) => {
+            const openings = [
+                { title: 'Teachers — All Subjects', type: 'Full-time', experience: 'B.Ed / M.Ed preferred', subjects: ['Hindi', 'English', 'Mathematics', 'Science', 'Social Studies', 'Computer', 'Drawing', 'Sanskrit'], desc: 'We are seeking passionate, qualified teachers for all subjects across Nursery to Class XII. Candidates must be enthusiastic, collaborative, and committed to student success.' },
+                { title: 'Primary Section Teachers', type: 'Full-time', experience: 'B.Ed preferred', subjects: ['Class I–V'], desc: 'We need dedicated primary teachers with strong fundamentals to build foundational learning for students in Classes I through V.' },
+                { title: 'Pre-Primary / Kidzee Teachers', type: 'Full-time', experience: 'Diploma in ECE preferred', subjects: ['Nursery', 'LKG', 'UKG'], desc: 'Creative and child-focused teachers needed for our Kidzee Play School wing, specializing in early childhood education.' },
+                { title: 'Computer Lab Instructor', type: 'Full-time', experience: '2+ years', subjects: ['Computer Science', 'ICT'], desc: 'Experienced computer instructor required for Classes VI–X, covering computer fundamentals, programming basics, and digital literacy.' }
+            ];
+
+            const [selectedJob, setSelectedJob] = useState(null);
+            const [formInputs, setFormInputs] = useState({ name: '', email: '', phone: '', qualification: '', experience: '', subjects: '', cvLink: '', coverLetter: '' });
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [isSuccess, setIsSuccess] = useState(false);
+
+            const handleInputChange = (field, val) => {
+                setFormInputs(prev => ({ ...prev, [field]: val }));
+            };
+
+            const handleSubmit = (ev) => {
+                ev.preventDefault();
+                if (!formInputs.name || !formInputs.email || !formInputs.phone) {
+                    alert('⚠️ Please fill out Name, Email, and Phone number.');
+                    return;
+                }
+                setIsSubmitting(true);
+                setTimeout(() => {
+                    const savedApps = JSON.parse(localStorage.getItem('bdms_job_applications') || '[]');
+                    const newApp = {
+                        id: Date.now(),
+                        jobTitle: selectedJob.title,
+                        ...formInputs,
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                    };
+                    localStorage.setItem('bdms_job_applications', JSON.stringify([newApp, ...savedApps]));
+                    setIsSubmitting(false);
+                    setIsSuccess(true);
+                    setFormInputs({ name: '', email: '', phone: '', qualification: '', experience: '', subjects: '', cvLink: '', coverLetter: '' });
+                }, 1500);
+            };
+
+            return e('div', { className: 'pt-28 pb-36 px-4 md:pt-40 md:pb-24 md:px-6 bg-slate-50 min-h-screen text-left' },
+                e('div', { className: 'max-w-5xl mx-auto space-y-10' }, [
+                    e('div', null, [
+                        e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-widest' }, 'Work With Us'),
+                        e('h1', { className: 'text-3xl md:text-5xl font-black text-slate-900 tracking-tight mt-1' }, 'Careers at R.L.S.'),
+                        e('p', { className: 'text-slate-500 text-sm mt-2 max-w-xl' }, 'Join our passionate team of educators and administrative staff. We are always looking for talented individuals committed to delivering quality education at R.L.S. Public School.')
+                    ]),
+
+                    // Why Join Banner
+                    e('div', { className: 'grid md:grid-cols-3 gap-4' }, [
+                        { t: 'Supportive Environment', d: 'Work in a collaborative, positive school culture with experienced colleagues', i: 'heart' },
+                        { t: 'Career Growth', d: 'Continuous professional development, workshops, and training opportunities', i: 'trending-up' },
+                        { t: 'Make an Impact', d: 'Shape the future of 1,180+ students from Nursery through Senior Secondary', i: 'star' }
+                    ].map(w => e('div', { key: w.t, className: 'bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm' }, [
+                        e('div', { className: 'w-10 h-10 bg-sky-50 border border-sky-100 text-sky-500 rounded-xl flex items-center justify-center mb-3' }, e(Icon, { n: w.i, size: 18 })),
+                        e('h3', { className: 'font-black text-slate-800 text-sm' }, w.t),
+                        e('p', { className: 'text-xs text-slate-500 font-medium mt-1 leading-relaxed' }, w.d)
+                    ]))),
+
+                    // Job Openings
+                    e('div', { className: 'space-y-4' }, [
+                        e('h2', { className: 'text-xl font-black text-slate-900' }, 'Current Openings'),
+                        ...openings.map(job => e('div', { key: job.title, className: 'bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow' }, [
+                            e('div', { className: 'flex flex-wrap items-start justify-between gap-4 mb-4' }, [
+                                e('div', null, [
+                                    e('h3', { className: 'font-black text-slate-800 text-base' }, job.title),
+                                    e('div', { className: 'flex gap-2 mt-2' }, [
+                                        e('span', { className: 'text-[9px] font-black px-2 py-1 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-full uppercase tracking-wider' }, job.type),
+                                        e('span', { className: 'text-[9px] font-black px-2 py-1 bg-sky-50 border border-sky-100 text-sky-600 rounded-full uppercase tracking-wider' }, job.experience)
+                                    ])
+                                ]),
+                                e('button', { onClick: () => { setSelectedJob(job); setIsSuccess(false); }, className: 'px-5 py-2.5 bg-sky-500 hover:bg-sky-400 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-colors cursor-pointer' }, 'Apply Now')
+                            ]),
+                            e('p', { className: 'text-sm text-slate-600 font-medium leading-relaxed mb-4' }, job.desc),
+                            e('div', { className: 'flex flex-wrap gap-2' },
+                                job.subjects.map(s => e('span', { key: s, className: 'px-2 py-1 bg-slate-50 border border-slate-200 rounded-lg text-[9px] font-black text-slate-600 uppercase tracking-wider' }, s))
+                            )
+                        ]))
+                    ]),
+
+                    // How to Apply
+                    e('div', { className: 'bg-[#0f172a] rounded-[2.5rem] p-8 text-white relative overflow-hidden' }, [
+                        e('div', { className: 'absolute top-0 right-0 w-48 h-48 bg-sky-500/10 rounded-full blur-2xl' }),
+                        e('div', { className: 'relative z-10' }, [
+                            e('h2', { className: 'text-xl font-black mb-2' }, 'How to Apply'),
+                            e('p', { className: 'text-slate-400 text-sm mb-6 leading-relaxed' }, 'To apply for any position at R.L.S. Public School, send your CV, qualifications, and a brief cover letter to our official email or contact us directly by phone. Walk-in interviews are also welcome during office hours (8:30 AM – 2:30 PM, Mon–Sat).'),
+                            e('div', { className: 'grid md:grid-cols-3 gap-4' }, [
+                                e('a', { href: 'mailto:rlspublicschool55@gmail.com', className: 'flex items-center gap-3 p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors' }, [
+                                    e('div', { className: 'w-8 h-8 bg-sky-500/20 rounded-lg flex items-center justify-center' }, e(Icon, { n: 'mail', size: 16, cls: 'text-sky-400' })),
+                                    e('div', null, [
+                                        e('p', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-wider' }, 'Email'),
+                                        e('p', { className: 'text-xs font-bold text-white' }, 'rlspublicschool55@gmail.com')
+                                    ])
+                                ]),
+                                e('a', { href: 'tel:+919471911451', className: 'flex items-center gap-3 p-4 bg-slate-800 hover:bg-slate-700 rounded-2xl transition-colors' }, [
+                                    e('div', { className: 'w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center' }, e(Icon, { n: 'phone', size: 16, cls: 'text-emerald-400' })),
+                                    e('div', null, [
+                                        e('p', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-wider' }, 'Phone'),
+                                        e('p', { className: 'text-xs font-bold text-white' }, '+91 94719 11451')
+                                    ])
+                                ]),
+                                e('div', { className: 'flex items-center gap-3 p-4 bg-slate-800 rounded-2xl' }, [
+                                    e('div', { className: 'w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center' }, e(Icon, { n: 'clock', size: 16, cls: 'text-amber-400' })),
+                                    e('div', null, [
+                                        e('p', { className: 'text-[9px] font-black text-slate-400 uppercase tracking-wider' }, 'Office Hours'),
+                                        e('p', { className: 'text-xs font-bold text-white' }, '8:30 AM – 2:30 PM, Mon–Sat')
+                                    ])
+                                ])
+                            ])
+                        ])
+                    ])
+                ]),
+                // Premium Modal Backdrop
+                selectedJob && e('div', { className: 'fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200' }, [
+                    // Modal Container
+                    e('div', { className: 'bg-white rounded-[2.5rem] w-full max-w-xl overflow-hidden shadow-[0_30px_70px_rgba(15,165,233,0.2)] border border-slate-100 relative animate-in zoom-in-95 duration-200 text-left' }, [
+                        // Header
+                        e('div', { className: 'bg-gradient-to-b from-sky-50 to-white px-8 py-8 border-b border-slate-100 relative' }, [
+                            !isSubmitting && e('button', { 
+                                onClick: () => setSelectedJob(null),
+                                className: 'w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 active:bg-slate-300 transition-colors cursor-pointer absolute right-6 top-6 shadow-sm'
+                            }, e(Icon, { n: 'x', size: 18 })),
+                            e('div', { className: 'w-12 h-12 bg-white rounded-[14px] shadow-sm border border-slate-100 text-sky-500 flex items-center justify-center mb-4' }, e(Icon, { n: 'briefcase', size: 22 })),
+                            e('span', { className: 'text-[9px] font-black text-sky-600 uppercase tracking-widest bg-sky-100/50 px-2.5 py-1 rounded-md mb-2 inline-block border border-sky-100' }, 'Career Application'),
+                            e('h3', { className: 'text-2xl font-black text-slate-800 leading-snug tracking-tight' }, selectedJob.title)
+                        ]),
+                        
+                        // Body
+                        isSuccess ? e('div', { className: 'p-10 flex flex-col items-center text-center space-y-4' }, [
+                            e('div', { className: 'w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner animate-bounce' }, e(Icon, { n: 'check', size: 32 })),
+                            e('h4', { className: 'text-xl font-black text-slate-800' }, 'Application Submitted Successfully!'),
+                            e('p', { className: 'text-xs text-slate-500 max-w-sm leading-relaxed font-bold' }, `Thank you for applying for the "${selectedJob.title}" position. Our human resources department will review your qualifications and contact you shortly.`),
+                            e('button', { 
+                                onClick: () => setSelectedJob(null),
+                                className: 'px-8 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:bg-sky-600 active:scale-95 transition-all mt-4' 
+                            }, 'Done')
+                        ]) : e('form', { onSubmit: handleSubmit, className: 'p-8 space-y-5 max-h-[60vh] overflow-y-auto custom-scrollbar' }, [
+                            e('div', { className: 'grid md:grid-cols-2 gap-4' }, [
+                                // Full Name
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Full Name *'),
+                                    e('input', { 
+                                        type: 'text', 
+                                        required: true, 
+                                        placeholder: 'e.g. Rajesh Kumar',
+                                        value: formInputs.name,
+                                        onChange: (ev) => handleInputChange('name', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ]),
+                                // Email Address
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Email Address *'),
+                                    e('input', { 
+                                        type: 'email', 
+                                        required: true, 
+                                        placeholder: 'e.g. rajesh@gmail.com',
+                                        value: formInputs.email,
+                                        onChange: (ev) => handleInputChange('email', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ])
+                            ]),
+                            e('div', { className: 'grid md:grid-cols-2 gap-4' }, [
+                                // Phone Number
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Phone Number *'),
+                                    e('input', { 
+                                        type: 'tel', 
+                                        required: true, 
+                                        placeholder: 'e.g. +91 94719 11451',
+                                        value: formInputs.phone,
+                                        onChange: (ev) => handleInputChange('phone', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ]),
+                                // Highest Qualification
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Highest Qualification *'),
+                                    e('input', { 
+                                        type: 'text', 
+                                        required: true, 
+                                        placeholder: 'e.g. B.Ed, M.Sc in Chemistry',
+                                        value: formInputs.qualification,
+                                        onChange: (ev) => handleInputChange('qualification', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ])
+                            ]),
+                            e('div', { className: 'grid md:grid-cols-2 gap-4' }, [
+                                // Experience
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Teaching Experience (Years)'),
+                                    e('input', { 
+                                        type: 'number', 
+                                        placeholder: 'e.g. 3',
+                                        value: formInputs.experience,
+                                        onChange: (ev) => handleInputChange('experience', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ]),
+                                // Subjects
+                                e('div', { className: 'space-y-1.5' }, [
+                                    e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Subjects of Specialization'),
+                                    e('input', { 
+                                        type: 'text', 
+                                        placeholder: 'e.g. Mathematics, Physics',
+                                        value: formInputs.subjects,
+                                        onChange: (ev) => handleInputChange('subjects', ev.target.value),
+                                        className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                    })
+                                ])
+                            ]),
+                            // Resume / CV Link
+                            e('div', { className: 'space-y-1.5' }, [
+                                e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Resume / CV Cloud Link (Google Drive, etc.)'),
+                                e('input', { 
+                                    type: 'url', 
+                                    placeholder: 'e.g. https://drive.google.com/your-cv',
+                                    value: formInputs.cvLink,
+                                    onChange: (ev) => handleInputChange('cvLink', ev.target.value),
+                                    className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors'
+                                })
+                            ]),
+                            // Cover Letter / Message
+                            e('div', { className: 'space-y-1.5' }, [
+                                e('label', { className: 'text-[10px] font-black text-slate-400 uppercase tracking-widest' }, 'Cover Letter / Brief Message'),
+                                e('textarea', { 
+                                    rows: 3,
+                                    placeholder: 'Share your background, teaching philosophy, and why you are excited to join R.L.S. Public School.',
+                                    value: formInputs.coverLetter,
+                                    onChange: (ev) => handleInputChange('coverLetter', ev.target.value),
+                                    className: 'w-full px-4 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800 focus:outline-none focus:border-sky-500 transition-colors resize-none'
+                                })
+                            ]),
+                            // Submit Row
+                            e('div', { className: 'flex justify-end gap-3 pt-3 border-t border-slate-100' }, [
+                                e('button', { 
+                                    type: 'button',
+                                    onClick: () => setSelectedJob(null),
+                                    className: 'px-5 py-3 rounded-xl border border-slate-200 text-slate-500 font-black text-xs uppercase hover:bg-slate-50 active:scale-95 transition-all'
+                                }, 'Cancel'),
+                                e('button', { 
+                                    type: 'submit',
+                                    disabled: isSubmitting,
+                                    className: 'px-8 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md shadow-sky-500/20 active:scale-95 transition-all flex items-center justify-center gap-2' 
+                                }, [
+                                    isSubmitting && e(Icon, { n: 'loader-2', size: 14, cls: 'animate-spin' }),
+                                    isSubmitting ? 'Submitting...' : 'Submit Application'
+                                ])
+                            ])
+                        ])
+                    ])
+                ])
+            );
+        };
+
         const DesktopHome = ({ go }) => {
             const [activeVisionTab, setActiveVisionTab] = useState('mission');
             const [selectedNotice, setSelectedNotice] = useState(null);
+            const [bgIndex, setBgIndex] = useState(0);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setBgIndex(idx => (idx + 1) % HERO_IMAGES.length);
+                }, 5000);
+                return () => clearInterval(timer);
+            }, []);
+
             return e('div', null,
                 e('section', { 
                     className: 'relative min-h-screen flex items-center overflow-hidden',
                     style: {
-                        backgroundImage: 'url("https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80")',
+                        backgroundImage: `url("${HERO_IMAGES[bgIndex]}")`,
                         backgroundSize: 'cover',
-                        backgroundPosition: 'center top'
+                        backgroundPosition: 'center',
+                        transition: 'background-image 1.5s ease-in-out'
                     }
                 },
                     e('div', { className: 'absolute inset-0', style: { background: 'linear-gradient(105deg, rgba(2,12,30,0.92) 0%, rgba(2,12,30,0.75) 45%, rgba(2,12,30,0.2) 100%)' } }),
                     e('div', { className: 'absolute top-32 left-1/3 w-96 h-96 rounded-full blur-3xl opacity-20', style: { background: 'radial-gradient(circle, #0ea5e9, transparent)' } }),
                     e('div', { className: 'absolute bottom-20 right-1/4 w-64 h-64 rounded-full blur-3xl opacity-15', style: { background: 'radial-gradient(circle, #2dd4bf, transparent)' } }),
+                    // Carousel Indicators
+                    e('div', { className: 'absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 z-10' }, 
+                        HERO_IMAGES.map((_, i) => e('button', {
+                            key: i,
+                            onClick: () => setBgIndex(i),
+                            className: `w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === bgIndex ? 'bg-sky-400 w-6' : 'bg-white/40'}`
+                        }))
+                    ),
                     e(NoticeTicker, { isMobile: false }),
                     e('div', { className: 'max-w-7xl mx-auto px-6 w-full relative z-10 grid md:grid-cols-2 gap-12 items-center pt-44 pb-20' },
                         e('div', { className: 'space-y-8' },
@@ -4382,7 +5239,7 @@
                         ),
                         e('div', { className: 'hidden md:flex flex-col gap-6' },
                             e('div', { className: 'float glass-card p-6 flex items-center gap-5' },
-                                e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-20 h-20 object-contain drop-shadow-2xl flex-shrink-0' }),
+                                e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-20 h-20 object-contain drop-shadow-2xl flex-shrink-0' }),
                                 e('div', null,
                                     e('div', { className: 'text-2xl font-black text-white mb-1' }, '\u091c\u094d\u091e\u093e\u0928\u092e\u094d \u092a\u0930\u092e\u092e\u094d \u092c\u0932\u092e\u094d'),
                                     e('div', { className: 'text-[10px] text-sky-300 font-bold uppercase tracking-[0.25em]' }, 'Our Sacred Motto'),
@@ -4391,7 +5248,7 @@
                             ),
                             e('div', { className: 'float-slow grid grid-cols-3 gap-4' },
                                 [
-                                    { v: '2018', l: 'Founded', i: 'calendar' },
+                                    { v: '2015', l: 'Founded', i: 'calendar' },
                                     { v: 'CBSE', l: 'Affiliated', i: 'award' },
                                     { v: 'English', l: 'Medium', i: 'book-open' }
                                 ].map(s => e('div', { key: s.l, className: 'glass-card p-5 text-center' },
@@ -4461,7 +5318,7 @@
                             e('p', { className: 'text-[10px] font-black text-sky-500 uppercase tracking-[0.3em] mb-3' }, 'Fast Navigation'),
                             e('h3', { className: 'text-2xl md:text-4xl font-black text-slate-900 tracking-tight' }, 'Quick Action Deck')
                         ]),
-                        e('div', { className: 'grid sm:grid-cols-2 gap-8' }, [
+                        e('div', { className: 'grid sm:grid-cols-2 lg:grid-cols-4 gap-8' }, [
                             // Action 1: Apply Online
                             e('div', { 
                                 onClick: () => go('admissions'),
@@ -4492,6 +5349,38 @@
                                     'View Events & Holidays',
                                     e(Icon, { n: 'arrow-right', size: 12, cls: 'group-hover:translate-x-1 transition-transform' })
                                 ])
+                            ]),
+
+                            // Action 3: Fees & Accounts
+                            e('div', { 
+                                onClick: () => go('fees'),
+                                className: 'bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-all hover:-translate-y-1.5 cursor-pointer text-left space-y-5 group'
+                            }, [
+                                e('div', { className: 'w-14 h-14 bg-amber-50 text-amber-500 border border-amber-100 rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform' }, e(Icon, { n: 'wallet', size: 24 })),
+                                e('div', null, [
+                                    e('h4', { className: 'text-xl font-black text-slate-800' }, 'Fees Portal'),
+                                    e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed mt-2' }, 'Check tuition fee schedules for regular school wings and pre-primary Kidzee classes.')
+                                ]),
+                                e('div', { className: 'text-amber-500 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 pt-2' }, [
+                                    'View Fee Structures',
+                                    e(Icon, { n: 'arrow-right', size: 12, cls: 'group-hover:translate-x-1 transition-transform' })
+                                ])
+                            ]),
+
+                            // Action 4: Video Highlights
+                            e('div', { 
+                                onClick: () => go('videos'),
+                                className: 'bg-white p-8 rounded-[2.5rem] border border-slate-200/60 shadow-sm hover:shadow-md transition-all hover:-translate-y-1.5 cursor-pointer text-left space-y-5 group'
+                            }, [
+                                e('div', { className: 'w-14 h-14 bg-purple-50 text-purple-500 border border-purple-100 rounded-3xl flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform' }, e(Icon, { n: 'video', size: 24 })),
+                                e('div', null, [
+                                    e('h4', { className: 'text-xl font-black text-slate-800' }, 'Media Gallery'),
+                                    e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed mt-2' }, 'Watch smart classrooms in action, vibrant annual days, campus tours, and parade ceremony videos.')
+                                ]),
+                                e('div', { className: 'text-purple-500 text-xs font-black uppercase tracking-wider flex items-center gap-1.5 pt-2' }, [
+                                    'Explore Video Highlights',
+                                    e(Icon, { n: 'arrow-right', size: 12, cls: 'group-hover:translate-x-1 transition-transform' })
+                                ])
                             ])
                         ])
                     ])
@@ -4517,7 +5406,7 @@
                                 'Welcome to R.L.S. Public School', e('span', { className: 'w-12 h-px bg-sky-500' })
                             ),
                             e('h2', { className: 'text-5xl md:text-6xl font-black mb-8 leading-[1.1] text-slate-900' }, 'A Tradition of ', e('span', { className: 'text-sky-600 italic' }, 'Excellence.')),
-                            e('p', { className: 'text-slate-600 text-lg font-medium leading-relaxed mb-10' }, 'Founded in 2018 in the heart of Piro, Bhojpur, R.L.S. Public School is dedicated to fostering a learning environment where academic rigor meets holistic character development.'),
+                            e('p', { className: 'text-slate-600 text-lg font-medium leading-relaxed mb-10' }, 'Founded in 2015 in the heart of Piro, Bhojpur, R.L.S. Public School is dedicated to fostering a learning environment where academic rigor meets holistic character development.'),
                             e('ul', { className: 'space-y-5 mb-12' },
                                 [
                                     'Comprehensive English-medium curriculum',
@@ -4549,17 +5438,17 @@
                                     e('img', { 
                                         src: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=300&h=300', 
                                         className: 'w-full h-full object-cover',
-                                        onError: (ev) => ev.target.src = 'https://ui-avatars.com/api/?name=Vikash+Singh'
+                                        onError: (ev) => ev.target.src = 'https://ui-avatars.com/api/?name=Dinesh+Kumar+Singh'
                                     })
                                 ),
                                 e('div', null, [
-                                    e('h3', { className: 'text-2xl font-black text-slate-800' }, 'Vikash Singh'),
+                                    e('h3', { className: 'text-2xl font-black text-slate-800' }, 'Dinesh Kumar Singh'),
                                     e('p', { className: 'text-[10px] font-bold text-sky-500 uppercase tracking-widest mt-1' }, 'Principal \u2022 R.L.S. Public School')
                                 ]),
                                 e('p', { className: 'text-xs text-slate-400 font-bold leading-relaxed' }, 'M.Sc., B.Ed. with 15+ years in CBSE academic administration.'),
                                 // Simulated signature graphic
                                 e('div', { className: 'pt-4 border-t border-slate-50 flex flex-col items-center' }, [
-                                    e('p', { className: 'font-serif italic text-lg text-slate-600 font-black tracking-wide select-none' }, 'Vikash Singh'),
+                                    e('p', { className: 'font-serif italic text-lg text-slate-600 font-black tracking-wide select-none' }, 'Dinesh Kumar Singh'),
                                     e('span', { className: 'text-[8px] font-black text-slate-400 uppercase tracking-widest mt-1' }, 'Official Signature')
                                 ])
                             ]),
@@ -4916,7 +5805,7 @@
                 { area: 'Manaini', fee: 500 },
                 { area: 'Mansagar', fee: 500 },
                 { area: 'Milki Tola', fee: 500 },
-                { area: 'Piro, Bhojpur', fee: 200 },
+                { area: 'Baluwahi Tola, Piro, Bhojpur', fee: 200 },
                 { area: 'Nonadih', fee: 300 },
                 { area: 'Panmari Mathiya', fee: 200 },
                 { area: 'Panwari', fee: 400 },
@@ -6137,7 +7026,7 @@
                             // Logo and Copy Indicator
                             e('div', { className: 'flex justify-between items-center border-b border-dashed border-slate-100 pb-3' }, [
                                 e('div', { className: 'flex items-center gap-3' }, [
-                                    e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
+                                    e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
                                     e('div', null, [
                                         e('p', { className: 'text-[9px] font-black text-emerald-600 uppercase tracking-widest' }, 'STUDENT COPY'),
                                         e('h4', { className: 'text-xs font-black text-slate-800 mt-0.5' }, 'R.L.S. Public School')
@@ -6383,7 +7272,7 @@
                     currency: 'INR',
                     name: 'R.L.S. Public School',
                     description: 'R.L.S. School Fee Payment',
-                    image: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png',
+                    image: './logo.png',
                     handler: function (response) {
                         try {
                             const db = JSON.parse(localStorage.getItem('bdms_firebase_mock') || '[]');
@@ -6496,7 +7385,7 @@
                     e('div', { className: 'space-y-8' }, [
                         // Branding Logo
                         e('div', { className: 'flex items-center gap-3 px-2' }, [
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' }),
+                            e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' }),
                             e('div', null, [
                                 e('h2', { className: 'font-black text-sm text-slate-800 tracking-tight leading-none' }, 'R.L.S. Public School'),
                                 e('p', { className: 'text-[9px] font-bold text-[#0B5CFF] uppercase tracking-widest mt-1.5' }, 'Student Portal')
@@ -6555,7 +7444,7 @@
                         }
                     }, [
                         e('div', { className: 'flex items-center gap-2' }, [
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Logo', className: 'w-8 h-8 object-contain drop-shadow-sm shrink-0' }),
+                            e('img', { src: './logo.png', alt: 'R.L.S. Logo', className: 'w-8 h-8 object-contain drop-shadow-sm shrink-0' }),
                             e('div', null, [
                                 e('span', { className: 'text-[11px] font-black tracking-tight text-slate-900 block leading-none' }, 'R.L.S. Public School PORTAL'),
                                 e('span', { className: 'text-[7.5px] font-bold uppercase tracking-widest text-[#0B5CFF] mt-1 block' }, student.name ? student.name.split(' ')[0] : 'Student')
@@ -7399,7 +8288,7 @@
             }, []);
 
             const isSingle = notices.length === 1;
-            return e('div', { className: 'space-y-5 pb-2 px-1 pt-2' }, notices.map((n, idx) => {
+            return e('div', { className: 'space-y-3 pb-1 px-1 pt-1' }, notices.map((n, idx) => {
                 const colors = [
                     { b: 'from-sky-50 to-sky-100', t: 'text-sky-500', icon: 'bell-ring', bg: 'bg-sky-50', shadow: 'shadow-sky-500/20' },
                     { b: 'from-rose-50 to-rose-100', t: 'text-rose-500', icon: 'zap', bg: 'bg-rose-50', shadow: 'shadow-rose-500/20' },
@@ -7411,22 +8300,22 @@
                 return e('div', { 
                     key: n.id, 
                     onClick: () => onNoticeClick && onNoticeClick(n),
-                    className: `bg-slate-50 border border-white p-4 rounded-3xl flex flex-col gap-3 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ` + 
+                    className: `bg-slate-50 border border-white p-4 rounded-3xl flex flex-col gap-2 relative overflow-hidden transition-all active:scale-[0.97] cursor-pointer ` + 
                         `shadow-[8px_15px_25px_-10px_rgba(0,0,0,0.1),_inset_0_4px_8px_rgba(255,255,255,1)] ` +
                         (isSingle ? 'single-notice-card' : '') 
                 }, [
-                    e('div', { className: 'flex items-start gap-3.5' }, [
+                    e('div', { className: 'flex items-start gap-2.5' }, [
                         // Claymorphic Icon Card
                         e('div', { className: `w-12 h-12 bg-gradient-to-br ${theme.b} ${theme.t} rounded-[14px] flex items-center justify-center flex-shrink-0 shadow-[inset_0_2px_4px_rgba(255,255,255,0.9),_0_5px_15px_-3px_var(--tw-shadow-color)] ${theme.shadow}` }, 
                             e(Icon, { n: theme.icon, size: 20 })
                         ),
                         // Content
                         e('div', { className: 'flex-grow min-w-0 pt-0.5' }, [
-                            e('div', { className: 'flex justify-between items-start gap-2 mb-1.5' }, [
-                                e('h4', { className: 'text-[13px] font-black text-slate-800 leading-snug tracking-tight break-words' }, n.t),
-                                e('span', { className: `px-2 py-1 bg-white rounded-md text-[8px] font-black ${theme.t} uppercase whitespace-nowrap shadow-sm border border-slate-100 shrink-0 mt-0.5` }, n.date)
+                            e('div', { className: 'flex flex-col gap-0.5 mb-1' }, [
+                                e('span', { className: `self-start px-2 py-0.5 bg-white rounded-md text-[8px] font-black ${theme.t} uppercase whitespace-nowrap shadow-sm border border-slate-100 shrink-0` }, n.date),
+                                e('h4', { className: 'text-[13px] font-black text-slate-800 leading-snug tracking-tight break-words' }, n.t)
                             ]),
-                            e('p', { className: 'text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2' }, n.d)
+                            e('p', { className: 'text-[11px] text-slate-500 font-medium leading-relaxed', style: { whiteSpace: 'pre-line' } }, n.d)
                         ])
                     ]),
                     // Image with thick clay frame
@@ -7441,6 +8330,7 @@
             const [latestNotice, setLatestNotice] = useState(null);
             const [showToast, setShowToast] = useState(false);
             const [selectedNoticePopup, setSelectedNoticePopup] = useState(null);
+            const [slideIndex, setSlideIndex] = useState(0);
 
             useEffect(() => {
                 const checkNotices = () => {
@@ -7460,6 +8350,13 @@
                 checkNotices();
                 window.addEventListener('storage', checkNotices);
                 return () => window.removeEventListener('storage', checkNotices);
+            }, []);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setSlideIndex(idx => (idx + 1) % HERO_IMAGES.length);
+                }, 4000);
+                return () => clearInterval(timer);
             }, []);
 
             return e('div', { className: 'pb-24 pt-20 px-4 bg-slate-50 min-h-screen space-y-6 w-full overflow-x-hidden relative' }, [
@@ -7486,6 +8383,26 @@
                     e('div', { className: 'text-slate-400 flex items-center gap-1 text-[10px] font-bold uppercase shrink-0' }, ['View', e(Icon, { n: 'chevron-right', size: 14 })])
                 ]),
                 e(NoticeTicker, { isMobile: true }),
+                /* Mobile Hero Carousel Card */
+                e('div', { className: 'relative h-48 rounded-[2rem] overflow-hidden border border-slate-100 shadow-md group active:scale-[0.99] transition-all cursor-pointer' }, [
+                    e('div', {
+                        className: 'absolute inset-0 bg-cover bg-center transition-all duration-1000',
+                        style: { backgroundImage: `url("${HERO_IMAGES[slideIndex]}")` }
+                    }),
+                    e('div', { className: 'absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent' }),
+                    // Content inside carousel card
+                    e('div', { className: 'absolute bottom-4 left-4 right-4 text-left text-white space-y-1.5' }, [
+                        e('span', { className: 'px-2 py-0.5 rounded bg-sky-500 text-[8px] font-black uppercase tracking-wider' }, 'RLS Campus Gallery'),
+                        e('h3', { className: 'text-sm font-extrabold tracking-tight text-white leading-tight' }, 'Explore Our Campus & Life at R.L.S. Public School'),
+                    ]),
+                    // Indicators
+                    e('div', { className: 'absolute top-4 right-4 flex gap-1 z-10' }, 
+                        HERO_IMAGES.map((_, i) => e('span', {
+                            key: i,
+                            className: `w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === slideIndex ? 'bg-sky-400 w-3.5' : 'bg-white/55'}`
+                        }))
+                    )
+                ]),
                 // Compact Dashboard Greeting Banner (Even larger horizontal rectangle)
                 e('div', { className: 'flex justify-between items-center bg-gradient-to-r from-[#20343a] to-white text-white rounded-[2rem] py-6 px-5 sm:py-8 sm:px-7 shadow-xl relative overflow-hidden border border-slate-100' }, [
                     e('div', { className: 'absolute -right-6 -top-6 w-24 h-24 bg-sky-500/10 rounded-full blur-2xl' }),
@@ -7497,7 +8414,7 @@
                         e('h1', { className: 'text-xl sm:text-3xl font-black tracking-tight leading-tight mb-1 text-white' }, 'R.L.S. Public School Digital Piro, Bhojpur'),
                         e('p', { className: 'text-[10px] sm:text-xs text-teal-100/70 font-bold uppercase tracking-widest' }, 'Piro, Bhojpur, Bihar')
                     ]),
-                    e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-12 h-12 object-contain drop-shadow-md z-10 shrink-0' })
+                    e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-12 h-12 object-contain drop-shadow-md z-10 shrink-0' })
                 ]),
 
                 // Circadian Sunshine Card (Mobile view - pill shaped, below greeting banner)
@@ -7621,6 +8538,80 @@
                                 ])
                             ]),
                             e(Icon, { n: 'chevron-right', size: 14, cls: 'text-slate-400' })
+                        ]),
+
+                        // Card 7: Video Gallery (Double-width Purple Card)
+                        e('div', { 
+                            onClick: () => go('videos'),
+                            className: 'col-span-2 bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'flex items-center gap-3.5' }, [
+                                e('div', { className: 'w-8 h-8 bg-purple-50 text-purple-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'video', size: 16 })),
+                                e('div', { className: 'text-left' }, [
+                                    e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'Video Gallery & Highlights'),
+                                    e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Watch Campus Tours & Annual Highlights')
+                                ])
+                            ]),
+                            e(Icon, { n: 'chevron-right', size: 14, cls: 'text-slate-400' })
+                        ]),
+
+                        // Card 8: About School (Double-width sky Card)
+                        e('div', { 
+                            onClick: () => go('about'),
+                            className: 'col-span-2 bg-white border border-slate-100 p-4 rounded-2xl flex items-center justify-between shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'flex items-center gap-3.5' }, [
+                                e('div', { className: 'w-8 h-8 bg-sky-50 text-sky-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'info', size: 16 })),
+                                e('div', { className: 'text-left' }, [
+                                    e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'About R.L.S. Public School'),
+                                    e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Vision, Mission, Facilities & History')
+                                ])
+                            ]),
+                            e(Icon, { n: 'chevron-right', size: 14, cls: 'text-slate-400' })
+                        ]),
+
+                        // Card 9 & 10: Courses + Gallery (Two-column)
+                        e('div', { 
+                            onClick: () => go('courses'),
+                            className: 'bg-white border border-slate-100 p-4 rounded-2xl flex flex-col justify-between h-28 shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'w-8 h-8 bg-indigo-50 text-indigo-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'book-open', size: 16 })),
+                            e('div', null, [
+                                e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'Our Courses'),
+                                e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Nur–Class X')
+                            ])
+                        ]),
+                        e('div', { 
+                            onClick: () => go('gallery'),
+                            className: 'bg-white border border-slate-100 p-4 rounded-2xl flex flex-col justify-between h-28 shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'w-8 h-8 bg-rose-50 text-rose-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'image', size: 16 })),
+                            e('div', null, [
+                                e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'Photo Gallery'),
+                                e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Events & Campus')
+                            ])
+                        ]),
+
+                        // Card 11 & 12: Events + Careers (Two-column)
+                        e('div', { 
+                            onClick: () => go('events'),
+                            className: 'bg-white border border-slate-100 p-4 rounded-2xl flex flex-col justify-between h-28 shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'star', size: 16 })),
+                            e('div', null, [
+                                e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'Events'),
+                                e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Sports & Fests')
+                            ])
+                        ]),
+                        e('div', { 
+                            onClick: () => go('careers'),
+                            className: 'bg-white border border-slate-100 p-4 rounded-2xl flex flex-col justify-between h-28 shadow-sm transition-all active:scale-95 cursor-pointer group' 
+                        }, [
+                            e('div', { className: 'w-8 h-8 bg-emerald-50 text-emerald-500 rounded-lg flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform' }, e(Icon, { n: 'briefcase', size: 16 })),
+                            e('div', null, [
+                                e('h4', { className: 'text-xs font-black text-slate-800 leading-tight' }, 'Careers'),
+                                e('p', { className: 'text-[8px] text-slate-400 font-bold uppercase tracking-wider mt-0.5' }, 'Join Our Team')
+                            ])
                         ])
                     ])
                 ]),
@@ -7671,7 +8662,7 @@
                 e('section', { className: 'bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden mb-4' }, [
                     e('div', { className: 'relative h-64 bg-slate-50' }, [
                         e('div', { className: 'absolute inset-0 flex items-center justify-center p-8 pb-16' },
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-24 h-24 object-contain drop-shadow-md' })
+                            e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-24 h-24 object-contain drop-shadow-md' })
                         ),
                         e('div', { className: 'absolute inset-0 bg-gradient-to-t from-slate-100/90 via-transparent to-transparent pointer-events-none' }),
                         e('div', { className: 'absolute bottom-4 left-4 right-4 flex items-center gap-3 bg-white/95 backdrop-blur rounded-2xl p-3 shadow-sm border border-white' }, [
@@ -7687,7 +8678,7 @@
                             'Welcome to R.L.S. Public School', e('span', { className: 'w-8 h-px bg-sky-500' })
                         ),
                         e('h2', { className: 'text-3xl font-black mb-4 leading-tight text-slate-900' }, 'A Tradition of ', e('span', { className: 'text-sky-600 italic' }, 'Excellence.')),
-                        e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed mb-6' }, 'Founded in 2018 in the heart of Piro, Bhojpur, R.L.S. Public School is dedicated to fostering a learning environment where academic rigor meets holistic character development.'),
+                        e('p', { className: 'text-xs text-slate-500 font-medium leading-relaxed mb-6' }, 'Founded in 2015 in the heart of Piro, Bhojpur, R.L.S. Public School is dedicated to fostering a learning environment where academic rigor meets holistic character development.'),
                         e('ul', { className: 'space-y-4 mb-6' },
                             [
                                 'Comprehensive English-medium curriculum',
@@ -7708,7 +8699,7 @@
                 // Compact Stats Row (Fits perfectly on one line like laptop stats)
 
                 e('div', { className: 'bg-white rounded-2xl shadow-sm border border-slate-100 p-3 flex justify-between divide-x divide-slate-100 text-center items-center' }, [
-                    { v: '2018', l: 'Founded', i: 'calendar' },
+                    { v: '2015', l: 'Founded', i: 'calendar' },
                     { v: 'CBSE', l: 'Board', i: 'award' },
                     { v: 'ENG', l: 'Medium', i: 'book-open' }
                 ].map(s => e('div', { key: s.l, className: 'flex-1 flex flex-col items-center justify-center py-1' }, [
@@ -7724,11 +8715,11 @@
                             e('img', { 
                                 src: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&q=80&w=150&h=150',
                                 className: 'w-full h-full object-cover',
-                                onError: (ev) => ev.target.src = 'https://ui-avatars.com/api/?name=Vikash+Singh'
+                                onError: (ev) => ev.target.src = 'https://ui-avatars.com/api/?name=Dinesh+Kumar+Singh'
                             })
                         ),
                         e('div', null, [
-                            e('h4', { className: 'text-sm font-black text-slate-900 leading-none' }, 'Vikash Singh'),
+                            e('h4', { className: 'text-sm font-black text-slate-900 leading-none' }, 'Dinesh Kumar Singh'),
                             e('p', { className: 'text-[8.5px] font-bold text-sky-500 uppercase tracking-wider mt-0.5' }, 'Principal \u2022 Desk & Vision')
                         ])
                     ]),
@@ -7784,50 +8775,134 @@
         const Home = ({ go }) => {
             const width = useWindowSize();
             const isMobile = width < 768;
-
             if (isMobile) {
                 return e(MobileHome, { go });
             }
             return e(DesktopHome, { go });
         };
 
-        const Footer = ({ go }) => e('footer', { className: 'py-6 md:py-24 border-t border-slate-100 bg-slate-50/50' },
-            e('div', { className: 'max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-5 md:gap-16 text-center md:text-left items-center' },
-                e('div', null,
-                    e('div', { className: 'flex items-center justify-center md:justify-start gap-2 mb-2 md:mb-6' },
-                        e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School', className: 'w-12 h-12 md:w-14 md:h-14 object-contain shrink-0' }),
-                        e('span', { className: 'text-sm md:text-lg font-black tracking-tight text-slate-900' }, 'R.L.S.', e('span', { className: 'text-sky-500' }, ' PUBLIC SCHOOL'))
-                    ),
-                    e('p', { className: 'text-slate-400 text-[10px] md:text-sm font-medium leading-relaxed max-w-sm mx-auto md:mx-0' }, 'R.L.S. Public School: "\u091c\u094d\u091e\u093e\u0928\u092e\u094d \u092a\u0930\u092e\u092e\u094d \u092c\u0932\u092e\u094d" - Knowledge is the supreme power. Serving Piro, Bhojpur since 2018.')
-                ),
-                e('div', { className: 'flex flex-col gap-1 md:gap-4' },
-                    e('p', { className: 'text-[8px] md:text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] mb-1 md:mb-4' }, 'Official Channels'),
-                    e('div', { className: 'flex justify-center md:justify-start gap-3 md:gap-6' },
-                        [
-                            { i: 'fa-brands fa-facebook',  c: 'hover:bg-[#1877F2] hover:text-white', cl: 'text-[#1877F2]' },
-                            { i: 'fa-brands fa-instagram',  c: 'hover:bg-gradient-to-tr hover:from-[#f9ce34] hover:via-[#ee2a7b] hover:to-[#6228d7] hover:text-white', cl: 'text-[#E4405F]' },
-                            { i: 'fa-solid fa-envelope', l: 'mailto:rlspublicschool55@gmail.com', c: 'hover:bg-slate-800 hover:text-white', cl: 'text-slate-400' }
-                        ].map(s => e('a', { 
-                            key: s.i, 
-                            href: s.l, 
-                            target: '_blank', 
-                            className: `w-9 h-9 md:w-12 md:h-12 clay-btn rounded-lg md:rounded-xl flex items-center justify-center transition-all duration-300 ${s.c} group` 
-                        }, e('i', { className: `${s.i} text-xs md:text-xl transition-colors ${s.cl} group-hover:text-white` })))
-                    )
-                ),
-                e('div', null,
-                    e('p', { className: 'text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5 md:mb-2' }, 'Establishment'),
-                    e('div', { className: 'text-slate-700 font-black text-sm md:text-xl' }, 'ESTD. 2018'),
-                    e('p', { className: 'text-[8px] md:text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 md:mt-1' }, 'PIRO, BHOJPUR')
+        const Footer = ({ go }) => {
+            const renderSocialSvg = (n) => {
+                const props = { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round', className: 'lucide' };
+                if (n === 'facebook') {
+                    return e('svg', props, [
+                        e('path', { d: 'M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' })
+                    ]);
+                }
+                if (n === 'instagram') {
+                    return e('svg', props, [
+                        e('rect', { width: 20, height: 20, x: 2, y: 2, rx: 5, ry: 5 }),
+                        e('path', { d: 'M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' }),
+                        e('line', { x1: 17.5, x2: 17.51, y1: 6.5, y2: 6.5 })
+                    ]);
+                }
+                if (n === 'twitter') {
+                    return e('svg', props, [
+                        e('path', { d: 'M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z' })
+                    ]);
+                }
+                if (n === 'youtube') {
+                    return e('svg', props, [
+                        e('path', { d: 'M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17z' }),
+                        e('path', { d: 'm10 15 5-3-5-3z' })
+                    ]);
+                }
+                return null;
+            };
+
+            return e('footer', { className: 'bg-slate-900 text-slate-300 font-medium' }, [
+                e('div', { className: 'max-w-7xl mx-auto px-4 py-4 md:px-6 md:py-12' }, [
+                    e('div', { className: 'grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-10 text-left' }, [
+                        // Column 1: Brand
+                        e('div', { className: 'col-span-2 md:col-span-1 space-y-2' }, [
+                            e('div', { className: 'flex items-center gap-2' }, [
+                                e('img', {
+                                    src: './logo.png',
+                                    alt: 'Logo',
+                                    className: 'w-7 h-7 md:w-10 md:h-10 object-contain'
+                                }),
+                                e('span', { className: 'font-black text-xs md:text-base text-white tracking-tight' }, 'R.L.S. Public School')
+                            ]),
+                            e('p', { className: 'text-[10px] md:text-xs text-slate-400 leading-relaxed' }, 
+                                'CBSE Affiliated School (Nursery to Class XII). Serving Piro, Bhojpur, Bihar since 2015. Affiliation No: 330862 | School Code: 65860.'
+                            ),
+                            e('div', { className: 'flex gap-2 pt-1' }, [
+                                { n: 'facebook', l: 'https://www.facebook.com/RLS-Public-School-Piro-115535490484712/' },
+                                { n: 'instagram', l: 'https://www.instagram.com/rlspublicschool55/' },
+                                { n: 'twitter', l: 'https://twitter.com/RLSPUBLICSCHOO1' },
+                                { n: 'youtube', l: 'https://www.youtube.com/channel/UCXG6ckkY5_Ow7XL3pfLMT9w' }
+                            ].map(soc => e('a', {
+                                key: soc.n,
+                                href: soc.l,
+                                target: '_blank',
+                                rel: 'noopener noreferrer',
+                                className: 'w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:bg-slate-700 hover:text-white transition-colors'
+                            }, renderSocialSvg(soc.n))))
+                        ]),
+
+                        // Column 2: Explore
+                        e('div', { className: 'col-span-1 space-y-1.5' }, [
+                            e('h4', { className: 'text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-widest' }, 'Explore'),
+                            e('ul', { className: 'space-y-1 text-[10px] md:text-xs' }, [
+                                { t: 'Home', p: 'home' },
+                                { t: 'About Us', p: 'about' },
+                                { t: 'Our Courses', p: 'courses' },
+                                { t: 'Photo Gallery', p: 'gallery' },
+                                { t: 'Events', p: 'events' },
+                                { t: 'Videos', p: 'videos' },
+                                { t: 'Careers', p: 'careers' }
+                            ].map(item => e('li', { key: item.t }, 
+                                e('button', {
+                                    onClick: () => go(item.p),
+                                    className: 'text-slate-400 hover:text-white transition-colors text-left font-bold'
+                                }, item.t)
+                            )))
+                        ]),
+
+                        // Column 3: Admissions
+                        e('div', { className: 'col-span-1 space-y-1.5' }, [
+                            e('h4', { className: 'text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-widest' }, 'Admissions'),
+                            e('ul', { className: 'space-y-1 text-[10px] md:text-xs' }, [
+                                { t: 'Apply Admission', p: 'admissions' },
+                                { t: 'Fee Structure', p: 'fees' },
+                                { t: 'Calendar', p: 'calendar' }
+                            ].map(item => e('li', { key: item.t }, 
+                                e('button', {
+                                    onClick: () => go(item.p),
+                                    className: 'text-slate-400 hover:text-white transition-colors text-left font-bold'
+                                }, item.t)
+                            )))
+                        ]),
+
+                        // Column 4: Contact
+                        e('div', { className: 'col-span-2 md:col-span-1 space-y-1.5' }, [
+                            e('h4', { className: 'text-[9px] md:text-xs font-black text-slate-400 uppercase tracking-widest' }, 'Contact Us'),
+                            e('ul', { className: 'space-y-1.5 text-[10px] md:text-xs text-slate-400' }, [
+                                e('li', { className: 'flex items-start gap-1.5' }, [
+                                    e(Icon, { n: 'map-pin', size: 12, cls: 'shrink-0 mt-0.5 text-slate-500' }),
+                                    e('span', null, 'Baluwahi Tola, Piro, Bhojpur, Bihar - 802207')
+                                ]),
+                                e('li', { className: 'flex items-center gap-1.5' }, [
+                                    e(Icon, { n: 'phone', size: 12, cls: 'shrink-0 text-slate-500' }),
+                                    e('a', { href: 'tel:+919471911451', className: 'hover:text-white transition-colors font-bold' }, '+91 94719 11451')
+                                ]),
+                                e('li', { className: 'flex items-center gap-1.5' }, [
+                                    e(Icon, { n: 'mail', size: 12, cls: 'shrink-0 text-slate-500' }),
+                                    e('a', { href: 'mailto:rlspublicschool55@gmail.com', className: 'hover:text-white transition-colors font-bold' }, 'rlspublicschool55@gmail.com')
+                                ])
+                            ])
+                        ])
+                    ])
+                ]),
+                e('div', { className: 'border-t border-slate-800 py-3 px-4' },
+                    e('div', { className: 'max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-1.5 text-center' }, [
+                        e('p', { className: 'text-[9px] font-bold text-slate-500 uppercase tracking-widest' }, '© 2026 R.L.S. Public School, Piro, Bhojpur, Bihar • All Rights Reserved'),
+                        e('p', { className: 'text-[9px] font-bold text-slate-600 uppercase tracking-widest' }, 'CBSE Aff. No: 330862 | School Code: 65860 | Est. 2015')
+                    ])
                 )
-            ),
-            e('div', { className: 'max-w-7xl mx-auto px-6 mt-5 md:mt-16 pt-4 md:pt-8 border-t border-slate-100 text-center' },
-                e('p', { className: 'text-[8px] md:text-[10px] font-bold text-slate-300 uppercase tracking-widest' }, 
-                    '\u00a9 2026 R.L.S. Public School Piro, Bhojpur \u00b7 Baluwahi Tola, (Barauli) Piro, Bhojpur, Bihar \u00b7 ',
-                    e('span', null, 'All Rights Reserved')
-                )
-            )
-        );
+            ]);
+        };
+
 
         const App = () => {
             const [page, setPage] = useState('home');
@@ -7846,14 +8921,14 @@
                     if ('Notification' in window && Notification.permission === 'granted') {
                         try {
                             // On some mobile browsers, standard Notification constructor throws error, requiring ServiceWorker
-                            new Notification(title, { body: message, icon: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png' });
+                            new Notification(title, { body: message, icon: './logo.png' });
                             systemNotificationFired = true;
                         } catch (e) {
                             if (navigator.serviceWorker) {
                                 navigator.serviceWorker.ready.then(reg => {
                                     reg.showNotification(title, { 
                                         body: message, 
-                                        icon: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png',
+                                        icon: './logo.png',
                                         vibrate: [200, 100, 200]
                                     });
                                 });
@@ -7874,13 +8949,6 @@
             }, []);
             const [loggedInStudent, setLoggedInStudent] = useState(() => localStorage.getItem('bdms_student_session'));
             const [isOnline, setIsOnline] = useState(navigator.onLine);
-            const [installPromptEvent, setInstallPromptEvent] = useState(null);
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            const [isPwaInstalled, setIsPwaInstalled] = useState(isStandalone);
-            const [showInstallBanner, setShowInstallBanner] = useState(false);
-            const [isDownloading, setIsDownloading] = useState(false);
-            const [downloadProgress, setDownloadProgress] = useState(0);
-            const [downloadStatusText, setDownloadStatusText] = useState('');
             const [activeSlipPreview, setActiveSlipPreview] = useState(null);
             const [isGeneratingSlip, setIsGeneratingSlip] = useState(false);
             const [isDownloadingBrochure, setIsDownloadingBrochure] = useState(false);
@@ -7901,7 +8969,7 @@
                             clearInterval(interval);
                             setTimeout(() => {
                                 setIsDownloadingBrochure(false);
-                                alert("📋 Virtual Brochure Download Completed! The R.L.S. Public School R.L.S. School Prospectus has been saved to your downloads.");
+                                alert("📋 Virtual Brochure Download Completed! The R.L.S. Public School Prospectus has been saved to your downloads.");
                             }, 500);
                         }
                         setBrochureProgress(progress);
@@ -7912,32 +8980,6 @@
                 const handleOffline = () => setIsOnline(false);
                 window.addEventListener('online', handleOnline);
                 window.addEventListener('offline', handleOffline);
-
-                const handleInstallPrompt = (e_ev) => {
-                    e_ev.preventDefault();
-                    window.deferredPWAInstallPrompt = e_ev;
-                    setInstallPromptEvent(e_ev);
-                    // Do NOT auto-show banner — user must click nav download button
-                };
-                window.addEventListener('beforeinstallprompt', handleInstallPrompt);
-                
-                // If it already fired before React mounted, consume it now
-                if (window.deferredPWAInstallPrompt) {
-                    setInstallPromptEvent(window.deferredPWAInstallPrompt);
-                }
-
-                // Check if already in standalone (installed PWA) mode
-                const currentlyStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-                if (currentlyStandalone) {
-                    setShowInstallBanner(false);
-                    setIsPwaInstalled(true);
-                }
-                
-                // Listen for app being installed
-                window.addEventListener('appinstalled', () => {
-                    setIsPwaInstalled(true);
-                    setShowInstallBanner(false);
-                });
 
                 const handleSessionChange = () => {
                     setLoggedInStudent(localStorage.getItem('bdms_student_session'));
@@ -7951,66 +8993,10 @@
                     window.bdms_trigger_brochure_download = null;
                     window.removeEventListener('online', handleOnline);
                     window.removeEventListener('offline', handleOffline);
-                    window.removeEventListener('beforeinstallprompt', handleInstallPrompt);
                     window.removeEventListener('storage', handleSessionChange);
                     window.removeEventListener('bdms_session_update', handleSessionChange);
                 };
             }, []);
-
-            const triggerInstall = () => {
-                setIsDownloading(true);
-                setDownloadProgress(0);
-                setDownloadStatusText('Connecting to R.L.S. Public School secure servers...');
-
-                let progress = 0;
-                const interval = setInterval(() => {
-                    progress += Math.floor(Math.random() * 12) + 6;
-                    if (progress >= 100) {
-                        progress = 100;
-                        clearInterval(interval);
-                        setDownloadStatusText('Download complete! Triggering automatic installer...');
-                        setTimeout(() => {
-                            setIsDownloading(false);
-                            if (installPromptEvent) {
-                                installPromptEvent.prompt();
-                                installPromptEvent.userChoice.then((choice) => {
-                                    if (choice.outcome === 'accepted') {
-                                        console.log('[PWA] User accepted the app install prompt');
-                                        localStorage.setItem('bdms_pwa_dismissed_or_seen', 'true');
-                                        setIsPwaInstalled(true);
-                                    }
-                                });
-                            } else {
-                                // If native prompt is blocked (e.g. insecure HTTP LAN connection), 
-                                // we show a non-intrusive toast instead of the forbidden manual install screen
-                                const id = Date.now();
-                                setGlobalToasts(q => [...q, { 
-                                    id, 
-                                    title: 'Install Blocked by Browser', 
-                                    message: 'Please tap your browser menu and select "Add to Home Screen".', 
-                                    icon: 'info', 
-                                    color: 'amber' 
-                                }]);
-                                setTimeout(() => setGlobalToasts(q => q.filter(t => t.id !== id)), 6000);
-                            }
-
-                            // Dismiss banner on success
-                            setShowInstallBanner(false);
-                        }, 800);
-                    } else {
-                        if (progress < 25) {
-                            setDownloadStatusText('Downloading bus schedules & GPS database (380 KB)...');
-                        } else if (progress < 55) {
-                            setDownloadStatusText('Downloading offline tuition planners & fee charts (1.2 MB)...');
-                        } else if (progress < 80) {
-                            setDownloadStatusText('Caching portal styles, icons & animations (450 KB)...');
-                        } else {
-                            setDownloadStatusText('Configuring offline service worker database...');
-                        }
-                    }
-                    setDownloadProgress(progress);
-                }, 180);
-            };
 
             const go = p => { setPage(p); window.scrollTo(0, 0); };
 
@@ -8021,14 +9007,20 @@
                     'OFFLINE MODE \u00b7 PORTAL ACTIVE VIA LOCAL CACHE'
                 ]),
 
-                (page !== 'portal' || !loggedInStudent) && e(Nav, { page, go, isPwaInstalled, onDownloadClick: () => { setShowInstallBanner(true); setIsDownloading(false); } }), 
+                (page !== 'portal' || !loggedInStudent) && e(Nav, { page, go }), 
                 e('main', null, 
                     page === 'home' && e(Home, { go }), 
                     page === 'admissions' && e('div', { className: 'admissions-page' }, e(Admissions, { go })), 
                     page === 'portal' && e(Portal, { go }), 
                     page === 'contact' && e(Contact),
                     page === 'calendar' && e(CalendarPage, { go }),
-                    page === 'fees' && e(FeesPage, { go })
+                    page === 'fees' && e(FeesPage, { go }),
+                    page === 'videos' && e(VideosPage, { go }),
+                    page === 'about' && e(AboutPage, { go }),
+                    page === 'courses' && e(CoursesPage, { go }),
+                    page === 'gallery' && e(GalleryPage, { go }),
+                    page === 'events' && e(EventsPage, { go }),
+                    page === 'careers' && e(CareersPage, { go })
                 ), 
                 (page !== 'portal' || !loggedInStudent) && e(Footer, { go }),
                 e(BottomNav, { page, go }),
@@ -8054,82 +9046,6 @@
                                 e('span', null, `${brochureProgress}%`),
                                 e('span', { className: 'text-sky-500 uppercase tracking-widest' }, 'Downloading')
                             ])
-                        ])
-                    ])
-                ),
-
-                // Premium Centered Claymorphic PWA Install Modal (Always displays on load if not standalone)
-                showInstallBanner && e('div', { className: 'fixed inset-0 bg-slate-950/70 backdrop-blur-md z-[999999] flex items-center justify-center p-4' }, 
-                    e('div', { className: 'bg-white max-w-md w-full p-8 rounded-[2.5rem] border border-sky-100 shadow-[0_30px_70px_rgba(14,165,233,0.3)] relative overflow-hidden flex flex-col items-center text-center animate-fade-in' }, [
-                        // Absolute top right close button (hidden during active download for focus)
-                        !isDownloading && e('button', { 
-                            onClick: () => {
-                                // Just close - nav button can reopen anytime
-                                setShowInstallBanner(false);
-                            }, 
-                            className: 'absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-full hover:bg-slate-50' 
-                        }, e(Icon, { n: 'x', size: 20 })),
-
-                        // Floating circular app icon container
-                        e('div', { className: 'relative w-24 h-24 bg-gradient-to-tr from-sky-50 to-indigo-50 border border-sky-100 rounded-3xl flex items-center justify-center mb-6 shadow-md shadow-sky-500/5' }, [
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-16 h-16 object-contain' }),
-                            isDownloading ? e('div', { className: 'absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center border-2 border-white shadow' }, 
-                                e(Icon, { n: 'loader-2', size: 12, cls: 'animate-spin' })
-                            ) : e('div', { className: 'absolute -bottom-1.5 -right-1.5 w-6 h-6 bg-sky-500 text-white rounded-full flex items-center justify-center border-2 border-white shadow animate-bounce' }, 
-                                e(Icon, { n: 'arrow-down', size: 12 })
-                            )
-                        ]),
-
-                        e('h3', { className: 'text-2xl font-black text-slate-800 tracking-tight' }, isDownloading ? 'Downloading R.L.S. Public School App...' : 'Download R.L.S. Public School Mobile App'),
-                        e('p', { className: 'text-slate-500 font-medium text-xs leading-relaxed max-w-xs mt-3 mb-6' }, 
-                            isDownloading ? 'Please wait while we pack the portal assets and secure offline caches.' : 'Install our official school portal app for lightning-fast speeds and offline-access to transport routes, fee charts, and daily notices.'
-                        ),
-
-                        // Feature highlights grid (hidden during active download)
-                        !isDownloading && e('div', { className: 'grid grid-cols-3 gap-3 w-full mb-8 text-center' }, [
-                            e('div', { className: 'p-3 bg-sky-50/50 rounded-2xl border border-sky-100/50' }, [
-                                e('div', { className: 'text-sky-600 flex justify-center mb-1' }, e(Icon, { n: 'wifi-off', size: 18 })),
-                                e('p', { className: 'text-[10px] font-black text-slate-700' }, 'Offline Access')
-                            ]),
-                            e('div', { className: 'p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100/50' }, [
-                                e('div', { className: 'text-indigo-600 flex justify-center mb-1' }, e(Icon, { n: 'zap', size: 18 })),
-                                e('p', { className: 'text-[10px] font-black text-slate-700' }, '10x Faster')
-                            ]),
-                            e('div', { className: 'p-3 bg-emerald-50/50 rounded-2xl border border-emerald-100/50' }, [
-                                e('div', { className: 'text-emerald-600 flex justify-center mb-1' }, e(Icon, { n: 'bell', size: 18 })),
-                                e('p', { className: 'text-[10px] font-black text-slate-700' }, 'Live Updates')
-                            ])
-                        ]),
-
-                        // Primary CTAs or Download progress bar
-                        isDownloading ? e('div', { className: 'w-full flex flex-col items-center mt-4' }, [
-                            // Progress bar outer track
-                            e('div', { className: 'w-full bg-slate-100 h-3.5 rounded-full overflow-hidden relative shadow-inner border border-slate-200/20' }, 
-                                // Progress bar inner fill
-                                e('div', { 
-                                    className: 'bg-gradient-to-r from-sky-500 via-sky-600 to-indigo-600 h-full rounded-full transition-all duration-150 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]', 
-                                    style: { width: downloadProgress + '%' } 
-                                })
-                            ),
-                            // Progress percentage
-                            e('span', { className: 'text-sm font-black text-sky-600 mt-3 tracking-wide' }, downloadProgress + '%'),
-                            // Status text
-                            e('p', { className: 'text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2.5 px-4 text-center leading-relaxed min-h-[32px]' }, downloadStatusText)
-                        ]) : e('div', { className: 'w-full flex flex-col gap-3' }, [
-                            e('button', { 
-                                onClick: triggerInstall, 
-                                className: 'w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 via-sky-600 to-indigo-600 text-white font-black text-xs hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98] transition-all flex items-center justify-center gap-2' 
-                            }, [
-                                e(Icon, { n: 'download', size: 16 }),
-                                'Download & Automatic Install'
-                            ]),
-                            e('button', { 
-                                onClick: () => {
-                                    // Just close for now - nav button can still reopen it
-                                    setShowInstallBanner(false);
-                                }, 
-                                className: 'w-full py-4 px-6 rounded-2xl bg-slate-100 text-slate-500 font-black text-xs hover:bg-slate-200 transition-colors' 
-                            }, 'Continue to Website')
                         ])
                     ])
                 ),
@@ -8205,15 +9121,5 @@
         ReactDOM.createRoot(document.getElementById('root')).render(e(App));
     </script>
     
-    <!-- PWA Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then((reg) => console.log('[PWA] Service Worker registered successfully:', reg.scope))
-                    .catch((err) => console.error('[PWA] Service Worker registration failed:', err));
-            });
-        }
-    </script>
 </body>
 </html>

@@ -11,3 +11,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Temp compaction logs and scratch scripts
+step_*_replacement.txt
+step_*_view.txt
+scratch/

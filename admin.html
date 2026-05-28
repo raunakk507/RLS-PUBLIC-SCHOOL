@@ -5,6 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>R.L.S. Public School Admin Portal | Management Desk</title>
     <link rel="icon" type="image/jpeg" href="http://rlspublicschool.in/assets/images/5e9b26a034cfc6.63821740.jpg" sizes="32x32">
+    <!-- Intercept uncaught JS errors to prevent silent blank screens in Admin Portal -->
+    <script>
+        window.onerror = function(message, source, lineno, colno, error) {
+            const root = document.getElementById('root');
+            if (root) {
+                root.style.display = 'block';
+                root.innerHTML = `
+                    <div style="padding: 24px; margin: 24px; background: #fee2e2; border: 2px solid #fca5a5; border-radius: 24px; color: #991b1b; font-family: system-ui, -apple-system, sans-serif; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: left;">
+                        <h2 style="margin-top: 0; font-size: 18px; font-weight: 800;">⚠️ Admin Portal Uncaught JS Error</h2>
+                        <p style="font-size: 13px; font-weight: 600; margin: 12px 0 6px;">Please inspect the logs or take a screenshot of this error:</p>
+                        <div style="background: #fff; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin: 12px 0; overflow-x: auto; font-family: monospace; font-size: 12px; line-height: 1.5; color: #7f1d1d;">
+                            <strong>Message:</strong> ${message}<br>
+                            <strong>File:</strong> ${source}<br>
+                            <strong>Line:</strong> ${lineno} | <strong>Col:</strong> ${colno}
+                            ${error && error.stack ? `<br><br><strong>Stack Trace:</strong><br>${error.stack.replace(/\n/g, '<br>')}` : ''}
+                        </div>
+                        <p style="font-size: 11px; color: #b91c1c; margin-bottom: 0; font-weight: 700;">Tip: Make sure you are connected to the internet to load CDN libraries, or check if browser cookies/localStorage are enabled.</p>
+                    </div>
+                `;
+            }
+            return false;
+        };
+    </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -611,6 +634,29 @@
     </script>
 
     <script type="module">
+        // Safe localStorage wrapper to prevent SecurityError crashes on file:// protocol or blocked environments
+        let safeStorage;
+        try {
+            safeStorage = window.localStorage;
+            if (safeStorage) {
+                safeStorage.getItem('__test_ls_access__');
+            } else {
+                throw new Error('localStorage is null');
+            }
+        } catch (e) {
+            console.warn('[Portal] localStorage access is restricted in this environment. Using in-memory fallback.');
+            const memoryStorage = {};
+            safeStorage = {
+                getItem: (key) => memoryStorage[key] || null,
+                setItem: (key, value) => { memoryStorage[key] = String(value); },
+                removeItem: (key) => { delete memoryStorage[key]; },
+                clear: () => { for (const k in memoryStorage) delete memoryStorage[k]; },
+                key: (index) => Object.keys(memoryStorage)[index] || null,
+                get length() { return Object.keys(memoryStorage).length; }
+            };
+        }
+        const localStorage = safeStorage;
+
         // One-time Reset of Local Storage Admissions Database to Clear Legacy Bloated/Wiped Records
         if (!localStorage.getItem('bdms_db_reset_2026_05_20')) {
             localStorage.removeItem('bdms_admissions_db');
@@ -619,6 +665,121 @@
         }
 
         const e = React.createElement, { useState, useEffect } = React;
+
+        
+
+    
+        const RLS_SCHOOL_INFO = {
+    name: 'R.L.S. Public School',
+    fullName: 'R.L.S. Public School',
+    shortName: 'RLS',
+    tagline: 'CBSE Affiliated School (UPTO +2 LEVEL)',
+    principal: 'Dinesh Kumar Singh',
+    managingSociety: 'Indrasani Devi Educational Society',
+    established: '2015',
+    affiliation: 'CBSE, New Delhi',
+    affiliationNo: '330862',
+    schoolCode: '65860',
+    type: 'Co-educational',
+    level: 'Nursery to Class XII',
+    pinCode: '802207',
+    rating: '4.6/5',
+    communityMotto: 'A community with high expectation and high academic achievement.',
+    vision: 'Our vision at R.L.S. Public School is to empower students to acquire, demonstrate, articulate and value knowledge and skills that will support them, as life-long learners, to participate in and contribute to the global world and practise the core values of the school: respect, tolerance & inclusion, and excellence.',
+    mission: 'To provide differentiated, in-depth and cohesive learning programs that support the academic, social, emotional, and physical development of children, enabling all learners access to quality education.',
+    coreValues: ['Respect', 'Tolerance & Inclusion', 'Excellence'],
+    address: 'Baluwahi Tola, (Barauli) Piro, Bhojpur, Bihar – 802207',
+    addressShort: 'Piro, Bhojpur, Bihar',
+    location: 'Baluwahi Tola, Piro, Bhojpur',
+    state: 'Bihar',
+    phone1: '+91-9471911451',
+    phone2: '+91-9006845566',
+    email: 'rlspublicschool55@gmail.com',
+    officeHours: '08:30 AM – 02:30 PM',
+    website: 'https://rlspublicschool.in',
+    studentPortal: 'https://rlsps.gungunerp.in/',
+    playStoreApp: 'https://play.google.com/store/apps/details?id=com.apprlsps.gungunerp.rls',
+    whatsapp: 'https://api.whatsapp.com/send?phone=+919006845566&text=Welcome%20to%20R.L.S.%20Public%20School.%20How%20may%20we%20help%20you?',
+    facebook: 'https://www.facebook.com/RLS-Public-School-Piro-115535490484712/',
+    instagram: 'https://www.instagram.com/rlspublicschool55/',
+    twitter: 'https://twitter.com/RLSPUBLICSCHOO1',
+    youtube: 'https://www.youtube.com/channel/UCXG6ckkY5_Ow7XL3pfLMT9w',
+    stats: { students: 1180, teachers: 35, staff: 32, yearsOfExcellence: 9 },
+    facilities: ['Smart Class', 'Library', 'Science Labs', 'Transport', 'Sports Infrastructure', 'Conference Hall'],
+    events: ['Annual Award Function', 'Independence Day', 'Republic Day', 'Parent-Management Meetings', 'Science Exhibition', 'Sports Day', 'Cultural Celebrations'],
+    documents: ['Birth Certificate', 'Aadhar Card (Child + Parents)', 'Residence Proof', 'Passport Photos', 'Transfer Certificate (for higher classes)', 'Previous Report Cards'],
+    logoUrl: './logo.png',
+    faviconUrl: 'http://rlspublicschool.in/assets/images/5e9b26a034cfc6.63821740.jpg',
+    aboutPhotoUrl: 'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg',
+    mapsEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d28849.67317151216!2d84.37820748381573!3d25.330761965374762!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x398d70e8e6fbf111%3A0x522b41218818f849!2sR.L.S%20PUBLIC%20SCHOOL!5e0!3m2!1sen!2sin!4v1613057792475!5m2!1sen!2sin'
+};
+        const RLS_FEE_STRUCTURE = {
+    session: '2022-23',
+    categories: ['Class I–III', 'Class IV–VI', 'Class VII–VIII', 'Class IX–X'],
+    fees: [
+        { name: 'Admission Form', frequency: 'One Time', amounts: [500, 500, 500, 500] },
+        { name: 'Admission Fee', frequency: 'One Time', amounts: [2500, 2500, 2500, 2500] },
+        { name: 'Development Fund', frequency: 'Annual', amounts: [1500, 1500, 1500, 1500] },
+        { name: 'Miscellaneous', frequency: 'Annual', amounts: [350, 350, 350, 350] },
+        { name: 'Exam Fee', frequency: 'Annual', amounts: [350, 350, 350, 350] },
+        { name: 'Festival Fee', frequency: 'Annual', amounts: [300, 300, 300, 300] },
+        { name: 'Society Fee', frequency: 'Monthly', amounts: [50, 50, 50, 50] },
+        { name: 'Tuition Fee', frequency: 'Monthly', amounts: [1100, 1250, 1400, 1550] },
+        { name: 'Total (First Year)', frequency: 'Total', amounts: [6650, 6800, 6950, 7100] }
+    ]
+};
+
+const RLS_KIDZEE_FEE_STRUCTURE = {
+    session: '2022-23',
+    category: 'Nursery to U.K.G',
+    fees: [
+        { name: 'Admission Form', frequency: 'One Time', amount: 500 },
+        { name: 'Admission Fee', frequency: 'One Time', amount: 2000 },
+        { name: 'Development Fund', frequency: 'Annual', amount: 1100 },
+        { name: 'Miscellaneous', frequency: 'Annual', amount: 300 },
+        { name: 'Exam Fee', frequency: 'Annual', amount: 300 },
+        { name: 'Festival Fee', frequency: 'Annual', amount: 300 },
+        { name: 'Society Fee', frequency: 'Monthly', amount: 50 },
+        { name: 'Tuition Fee', frequency: 'Monthly', amount: 950 },
+        { name: 'Total Fee', frequency: 'Total', amount: 5500 }
+    ]
+};
+        const RLS_COURSES = [
+    { cls: 'Nursery', subjects: ['Hindi', 'English', 'Maths', 'Drawing'] },
+    { cls: 'LKG', subjects: ['Hindi', 'English', 'Maths', 'Drawing'] },
+    { cls: 'UKG', subjects: ['Hindi', 'English', 'Maths', 'Drawing', 'EVS'] },
+    { cls: 'Class I', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'EVS', 'Computer'] },
+    { cls: 'Class II', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'EVS', 'Computer'] },
+    { cls: 'Class III', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'EVS', 'Computer'] },
+    { cls: 'Class IV', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'EVS', 'Computer'] },
+    { cls: 'Class V', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'EVS', 'Computer'] },
+    { cls: 'Class VI', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'S.St', 'Computer'] },
+    { cls: 'Class VII', subjects: ['Hindi', 'English', 'Maths', 'Science', 'Drawing', 'S.St', 'Computer'] },
+    { cls: 'Class VIII', subjects: ['Hindi', 'English', 'Maths', 'Science', 'S.St', 'Computer'] },
+    { cls: 'Class IX', subjects: ['Hindi', 'English', 'Maths', 'Science', 'S.St', 'Computer'] },
+    { cls: 'Class X', subjects: ['Hindi', 'English', 'Maths', 'Science', 'S.St', 'Computer', 'Sanskrit'] }
+];
+        const RLS_GALLERY_PHOTOS = [
+    'http://rlspublicschool.in/assets/images/5e9b3231294c39.57902661.jpg',
+    'http://rlspublicschool.in/assets/images/6053fd1e98cb96.40885111.jpg',
+    'http://rlspublicschool.in/assets/images/68d241561ea7b1.51285988.jpg',
+    'http://rlspublicschool.in/assets/images/6053fc2f44b019.74126295.jpg',
+    'http://rlspublicschool.in/assets/images/68d241c1895282.51081358.png',
+    'http://rlspublicschool.in/assets/images/646f7fface93c4.20862286.jpg',
+    'http://rlspublicschool.in/assets/images/68d242cb341f77.30926076.jpg',
+    'http://rlspublicschool.in/assets/images/646f804dc97df1.80463924.jpg',
+    'http://rlspublicschool.in/assets/images/68d2426d5f4673.58097166.jpg',
+    'http://rlspublicschool.in/assets/images/68d24593556b55.90176539.jpg',
+    'http://rlspublicschool.in/assets/images/68d2464d736796.48614326.jpg',
+    'http://rlspublicschool.in/assets/images/5eb8d723493f92.74318293.jpg',
+    'http://rlspublicschool.in/assets/images/5eb8dc364705e5.82857038.jpg',
+    'http://rlspublicschool.in/assets/images/69a4f6c268d179.64618665.jpg',
+    'http://rlspublicschool.in/assets/images/691b400293b0d9.76254803.jpg',
+    'http://rlspublicschool.in/assets/images/691b40752436e3.45009539.jpg'
+];
+        // End RLS School Data
+        // ============================================================
+    
 
         // Custom Dynamic Icon component matching primary app
         const Icon = ({ n, cls, size = 18 }) => {
@@ -896,7 +1057,7 @@
 
                 ctx.fillStyle = '#64748b';
                 ctx.font = '500 12px sans-serif';
-                ctx.fillText('Estd. 2018 · Affiliated to CBSE Pattern', 400, 140);
+                ctx.fillText('Estd. 2015 · Affiliated to CBSE Pattern', 400, 140);
 
 
 
@@ -1424,7 +1585,7 @@
             const [students, setStudents] = useState([]);
             const [dbStats, setDbStats] = useState({ count: 0, lastSync: 'Never' });
             
-            const FEE_ADDRESSES = ['Amruha', 'B. Moap / C. Moap', 'B. Sik (Kala)', 'Bagar', 'Bagar Tola', 'Bahuara', 'Bangauti', 'Basra', 'Berai', 'Bhikhampur', 'Bhisampura', 'Bihita', 'Birbal Tola', 'Bishambarpura', 'C. Sik (Khurd)', 'Chouri', 'Daridih', 'Darna', 'Dhanchua', 'Dhokaraha', 'Fatehpur', 'Imadpur', 'Itour', 'Janakpuria', 'Khutaha', 'Kodiar', 'Kolodihari', 'Kosiar', 'Kurmuri', 'Lachidih', 'Mahavirganj', 'Manaini', 'Mansagar', 'Milki Tola', 'Piro, Bhojpur', 'Nonadih', 'Panmari Mathiya', 'Panwari', 'Purahara', 'Rajpur', 'Ratani Tola', 'Sahiyara', 'Sawana', 'Sik Tola', 'Vishnupura'];
+            const FEE_ADDRESSES = ['Amruha', 'B. Moap / C. Moap', 'B. Sik (Kala)', 'Bagar', 'Bagar Tola', 'Bahuara', 'Bangauti', 'Basra', 'Berai', 'Bhikhampur', 'Bhisampura', 'Bihita', 'Birbal Tola', 'Bishambarpura', 'C. Sik (Khurd)', 'Chouri', 'Daridih', 'Darna', 'Dhanchua', 'Dhokaraha', 'Fatehpur', 'Imadpur', 'Itour', 'Janakpuria', 'Khutaha', 'Kodiar', 'Kolodihari', 'Kosiar', 'Kurmuri', 'Lachidih', 'Mahavirganj', 'Manaini', 'Mansagar', 'Milki Tola', 'Baluwahi Tola, Piro, Bhojpur', 'Nonadih', 'Panmari Mathiya', 'Panwari', 'Purahara', 'Rajpur', 'Ratani Tola', 'Sahiyara', 'Sawana', 'Sik Tola', 'Vishnupura'];
             const CLASSES = ['Nursery', 'LKG', 'UKG', '1st Grade', '2nd Grade', '3rd Grade', '4th Grade', '5th Grade', '6th Grade', '7th Grade', '8th Grade', '9th Grade', '10th Grade', '11th Grade', '12th Grade'];
             
             const defaultGrid = [{ id: '', name: '', fname: '', dob: '', address: '', class: '', photo: '', uploadingPhoto: false }];
@@ -2659,6 +2820,129 @@
             ]);
         };
 
+        const CareerManager = () => {
+            const [applications, setApplications] = useState([]);
+            const [expandedId, setExpandedId] = useState(null);
+
+            const loadApplications = () => {
+                const db = JSON.parse(localStorage.getItem('bdms_job_applications') || '[]');
+                setApplications(db);
+            };
+
+            useEffect(() => {
+                loadApplications();
+                const handleStorageChange = (e) => {
+                    if (e.key === 'bdms_job_applications') {
+                        loadApplications();
+                    }
+                };
+                window.addEventListener('storage', handleStorageChange);
+                return () => {
+                    window.removeEventListener('storage', handleStorageChange);
+                };
+            }, []);
+
+            const deleteApp = (id) => {
+                if (confirm('Are you sure you want to permanently delete this application?')) {
+                    const updated = applications.filter(a => a.id !== id);
+                    localStorage.setItem('bdms_job_applications', JSON.stringify(updated));
+                    setApplications(updated);
+                }
+            };
+
+            return e('div', { className: 'clay-card p-6 md:p-8 border border-slate-200 text-slate-800 bg-white fade-up' }, [
+                e('div', { className: 'mb-8' }, [
+                    e('h3', { className: 'text-lg md:text-xl font-black flex items-center gap-2 text-slate-900' }, [
+                        e(Icon, { n: 'briefcase', size: 18, cls: 'text-sky-600' }), 
+                        'Career Applications'
+                    ]),
+                    e('p', { className: 'text-slate-500 text-xs font-bold uppercase mt-1 tracking-widest' }, 'Review Faculty & Teacher Recruitment Applications')
+                ]),
+
+                applications.length === 0 ? e('div', { className: 'text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200' }, [
+                    e('div', { className: 'w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4' }, e(Icon, { n: 'inbox', size: 20 })),
+                    e('h4', { className: 'text-sm font-black text-slate-700' }, 'No Applications Submitted'),
+                    e('p', { className: 'text-xs text-slate-500 font-medium mt-1' }, 'Teacher job applications submitted through the Careers page will appear here.')
+                ]) : e('div', { className: 'space-y-4' }, 
+                    applications.map(a => {
+                        const isExpanded = expandedId === a.id;
+                        return e('div', { 
+                            key: a.id, 
+                            className: `border rounded-2xl bg-sky-50 transition-all overflow-hidden ${isExpanded ? 'border-sky-500/40 shadow-lg' : 'border-sky-100 hover:border-sky-500/20'}` 
+                        }, [
+                            e('div', { 
+                                onClick: () => setExpandedId(isExpanded ? null : a.id),
+                                className: 'p-4 md:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer hover:bg-sky-100 transition-colors select-none' 
+                            }, [
+                                e('div', { className: 'flex items-center gap-4' }, [
+                                    e('div', { className: 'w-10 h-10 bg-sky-100 text-sky-600 rounded-xl flex items-center justify-center shrink-0' }, e(Icon, { n: 'user', size: 18 })),
+                                    e('div', null, [
+                                        e('div', { className: 'flex items-center gap-2' }, [
+                                            e('h4', { className: 'text-sm font-black text-slate-900' }, a.name),
+                                            e('span', { className: 'px-2 py-0.5 bg-sky-100 text-sky-600 border border-sky-200 text-[8px] font-black rounded uppercase' }, a.jobTitle)
+                                        ]),
+                                        e('p', { className: 'text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-wider' }, `Submitted on ${a.date}`)
+                                    ])
+                                ]),
+                                e('div', { className: 'flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end shrink-0' }, [
+                                    e('span', { className: 'px-3 py-1 rounded-full text-[9px] font-black uppercase bg-sky-100 text-sky-700 border border-sky-200' }, 'Received'),
+                                    e('div', { className: `w-7 h-7 rounded-lg flex items-center justify-center bg-sky-100 text-sky-600 transition-transform ${isExpanded ? 'rotate-180' : ''}` }, 
+                                        e(Icon, { n: 'chevron-down', size: 14 })
+                                    )
+                                ])
+                            ]),
+
+                            isExpanded && e('div', { className: 'px-6 pb-6 pt-2 border-t border-sky-100 bg-sky-50 space-y-4 text-left' }, [
+                                e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' }, [
+                                    e('div', { className: 'bg-white p-5 rounded-2xl border border-sky-100 shadow-sm space-y-3' }, [
+                                        e('h5', { className: 'text-xs font-black text-sky-600 uppercase tracking-widest border-b border-sky-100 pb-2' }, 'Candidate Details'),
+                                        e('div', { className: 'grid grid-cols-2 gap-3 text-xs text-slate-600 font-bold' }, [
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase' }, 'Email'),
+                                                e('p', { className: 'text-slate-800 mt-0.5 truncate' }, a.email)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase' }, 'Phone'),
+                                                e('p', { className: 'text-slate-800 mt-0.5' }, a.phone)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase' }, 'Qualification'),
+                                                e('p', { className: 'text-slate-800 mt-0.5' }, a.qualification)
+                                            ]),
+                                            e('div', null, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase' }, 'Experience (Years)'),
+                                                e('p', { className: 'text-slate-800 mt-0.5' }, a.experience ? `${a.experience} years` : 'N/A')
+                                            ]),
+                                            a.subjects && e('div', { className: 'col-span-2' }, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase' }, 'Subjects of Specialization'),
+                                                e('p', { className: 'text-slate-800 mt-0.5' }, a.subjects)
+                                            ]),
+                                            a.cvLink && e('div', { className: 'col-span-2 pt-2 border-t border-slate-100' }, [
+                                                e('p', { className: 'text-[9px] font-bold text-slate-400 uppercase mb-1' }, 'Resume / CV Cloud Link'),
+                                                e('a', { href: a.cvLink, target: '_blank', className: 'text-sky-500 hover:text-sky-600 underline truncate block font-black' }, a.cvLink)
+                                            ])
+                                        ])
+                                    ]),
+
+                                    e('div', { className: 'bg-white p-5 rounded-2xl border border-sky-100 shadow-sm space-y-3' }, [
+                                        e('h5', { className: 'text-xs font-black text-sky-600 uppercase tracking-widest border-b border-sky-100 pb-2' }, 'Cover Letter / Message'),
+                                        e('p', { className: 'text-xs text-slate-650 font-semibold leading-relaxed whitespace-pre-line' }, a.coverLetter || 'No cover letter provided.')
+                                    ])
+                                ]),
+
+                                e('div', { className: 'flex justify-end gap-3 border-t border-sky-100 pt-4' }, [
+                                    e('button', { 
+                                        onClick: () => deleteApp(a.id),
+                                        className: 'px-4 py-2 bg-rose-50 text-rose-700 border border-rose-200 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all cursor-pointer'
+                                    }, 'Delete Application')
+                                ])
+                            ])
+                        ]);
+                    })
+                )
+            ]);
+        };
+
         const DepartmentPortal = () => {
             const [username, setUsername] = useState('');
             const [password, setPassword] = useState('');
@@ -2723,7 +3007,7 @@
                     e('div', { className: 'clay-card max-w-md w-full p-6 md:p-10 text-center border border-slate-200/80 bg-white/80 backdrop-blur-2xl shadow-xl' }, [
                         // R.L.S. Public School Logo
                         e('div', { className: 'w-16 h-16 md:w-20 md:h-20 bg-sky-500/10 text-sky-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-md border border-sky-500/20' }, 
-                            e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' })
+                            e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-10 h-10 object-contain shrink-0' })
                         ),
                         e('h2', { className: 'text-xl md:text-2xl font-black mb-1 text-slate-800 tracking-tight' }, 'Admin Portal Office'),
                         e('p', { className: 'text-sky-500 text-[10px] md:text-xs font-black uppercase tracking-widest mb-6 md:mb-8' }, 'Central Terminal Authentication'),
@@ -2774,7 +3058,7 @@
                     e('div', { className: 'flex justify-between items-center mb-6 md:mb-12' },
                         e('div', null,
                             e('h1', { className: 'text-xl md:text-3xl font-black tracking-tight text-white flex items-center gap-2 md:gap-3' }, [
-                                e('img', { src: 'http://rlspublicschool.in/assets/images/621d12bacd26b3.90553425.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
+                                e('img', { src: './logo.png', alt: 'R.L.S. Public School Logo', className: 'w-8 h-8 object-contain shrink-0' }),
                                 e('span', null, ['Admin Portal ', e('span', { className: 'text-sky-500 text-[10px] md:text-sm font-extrabold uppercase ml-1' }, '\u2726 Office')])
                             ]),
                             e('p', { className: 'text-sky-400 text-[9px] md:text-xs font-bold uppercase tracking-widest mt-1 hidden md:block' }, `Authorized Central Terminal Console`)
@@ -2789,13 +3073,14 @@
                     ),
                     
                     // Desktop grid of navigation cards - hidden on mobile!
-                    e('div', { className: 'hidden md:grid grid-cols-5 gap-6 mb-16' },
+                    e('div', { className: 'hidden md:grid grid-cols-6 gap-6 mb-16' },
                         [
                             { l: 'Admin', v: '12 Active', i: 'user-plus', c: 'bg-blue-500/20 text-blue-400 border border-blue-500/30' },
                             { l: 'Staff', v: '45 Faculty', i: 'users', c: 'bg-purple-500/20 text-purple-400 border border-purple-500/30' },
                             { l: 'Fees', v: 'Manage Accounts', i: 'banknote', c: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' },
                             { l: 'Data', v: 'Sync DB', i: 'file-text', c: 'bg-amber-500/20 text-amber-400 border border-amber-500/30' },
-                            { l: 'Admissions', v: `${admissionsCount} Records`, i: 'graduation-cap', c: 'bg-sky-500/20 text-sky-400 border border-sky-500/30' }
+                            { l: 'Admissions', v: `${admissionsCount} Records`, i: 'graduation-cap', c: 'bg-sky-500/20 text-sky-400 border border-sky-500/30' },
+                            { l: 'Careers', v: 'Review CVs', i: 'briefcase', c: 'bg-teal-500/20 text-teal-400 border border-teal-500/30' }
                         ].map(s => e('div', { 
                             key: s.l, 
                             onClick: () => setActiveTab(s.l),
@@ -2812,7 +3097,8 @@
                         activeTab === 'Data' ? e(StudentDatabaseManager) :
                         activeTab === 'Staff' ? e(StaffManager) :
                         activeTab === 'Fees' ? e(FeeManager) :
-                        activeTab === 'Admissions' ? e(AdmissionManager) : null
+                        activeTab === 'Admissions' ? e(AdmissionManager) :
+                        activeTab === 'Careers' ? e(CareerManager) : null
                     ),
 
                     e('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 border-t border-slate-800 pt-8 md:pt-12' },
