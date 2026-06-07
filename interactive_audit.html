@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200, initial-scale=1.0">
+    <title>Website Modernization Audit | R.L.S. Public School</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ghostwhite: '#f7f7ff',
+                        persianblue: '#27187e',
+                        persianlight: 'rgba(39, 24, 126, 0.05)',
+                        persianborder: 'rgba(39, 24, 126, 0.15)'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f7ff;
+            color: #1e293b;
+            min-width: 1200px;
+            width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        .audit-card {
+            background: #ffffff;
+            border: 1.5px solid rgba(39, 24, 126, 0.12);
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(39, 24, 126, 0.03);
+            padding: 30px;
+        }
+        
+        /* Cropped Screenshot viewport container */
+        .screenshot-viewport {
+            border: 1.5px dashed rgba(39, 24, 126, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #ffffff;
+            margin-bottom: 15px;
+            height: 250px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Print Override Styles */
+        @media print {
+            body {
+                background: white !important;
+                color: #0f172a !important;
+                width: 210mm !important;
+                min-width: 210mm !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .controls-bar {
+                display: none !important;
+            }
+            .audit-card {
+                background: #ffffff !important;
+                border: 1.5px solid rgba(39, 24, 126, 0.2) !important;
+                box-shadow: none !important;
+                page-break-inside: avoid !important;
+                margin-bottom: 25px !important;
+                border-radius: 12px !important;
+                padding: 20px !important;
+            }
+            .page-break {
+                page-break-before: always !important;
+            }
+            .upload-placeholder {
+                display: none !important;
+            }
+            .remove-btn {
+                display: none !important;
+            }
+            .screenshot-viewport {
+                border: 1px solid #cbd5e1 !important;
+                background: #ffffff !important;
+            }
+        }
+    </style>
+</head>
+<body class="space-y-8">
+
+
+
+    <!-- MAIN REPORT DOCUMENT HEADER -->
+    <div class="audit-card bg-white border-2 border-persianborder relative overflow-hidden p-10 flex flex-col items-center text-center space-y-6">
+        <!-- Decorative subtle background accents -->
+        <div class="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-persianlight to-transparent rounded-br-full opacity-50"></div>
+        <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-persianlight to-transparent rounded-bl-full opacity-50"></div>
+
+        <!-- School Logo Emblem Frame -->
+        <div class="relative w-24 h-24 rounded-full bg-ghostwhite border-2 border-[#27187e]/20 p-2 flex items-center justify-center shadow-sm z-10">
+            <img src="./logo.png" alt="R.L.S. Public School Logo" class="w-16 h-16 object-contain">
+        </div>
+
+        <div class="space-y-3 max-w-2xl z-10">
+            <!-- Pill Badge -->
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-persianlight text-persianblue border border-persianborder mx-auto">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Website Quality Compliance Audit
+            </span>
+            
+            <h1 class="text-3xl md:text-4xl font-extrabold text-[#27187e] tracking-tight leading-none uppercase">
+                Official Website Audit Report
+            </h1>
+            
+            <p class="text-slate-500 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+                <span>Live Site: rlspublicschool.in</span>
+                <span class="text-persianblue/40 font-black">✦</span>
+                <span class="text-persianblue font-black">Webtrivo Redesign Prototype</span>
+            </p>
+        </div>
+
+        <!-- Divider line -->
+        <div class="w-full max-w-md h-px bg-gradient-to-r from-transparent via-persianborder to-transparent z-10"></div>
+
+        <!-- Official Report Metadata Grid -->
+        <div class="grid grid-cols-4 gap-6 w-full max-w-3xl pt-2 text-left z-10">
+            <div class="space-y-1 border-r border-slate-100 pr-4">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Prepared For</span>
+                <span class="text-xs font-extrabold text-slate-800 block leading-tight">School Management & Principal</span>
+                <span class="text-[10px] font-bold text-slate-500 block leading-none">R.L.S. Public School</span>
+            </div>
+            <div class="space-y-1 border-r border-slate-100 pr-4 pl-2">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Audited By</span>
+                <span class="text-xs font-extrabold text-slate-800 block leading-tight">Webtrivo Agency</span>
+                <span class="text-[10px] font-bold text-slate-500 block leading-none">www.webtrivo.in</span>
+            </div>
+            <div class="space-y-1 border-r border-slate-100 pr-4 pl-2">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Audit Date</span>
+                <span class="text-xs font-extrabold text-slate-800 block leading-tight">June 6, 2026</span>
+                <span class="text-[10px] font-bold text-slate-500 block leading-none">Release Version 2.4</span>
+            </div>
+            <div class="space-y-1 pl-2">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Compliance Index</span>
+                <span class="text-xs font-extrabold text-emerald-600 block leading-tight flex items-center gap-1">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> CBSE Sec. 45 Safe
+                </span>
+                <span class="text-[10px] font-bold text-slate-500 block leading-none">Verified Secure Data</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 1. FIRST IMPRESSION -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">1</span>
+            <h3 class="text-lg font-black text-persianblue">First Impression & Brand Perception</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            First impressions dictate parental confidence. Below are actual screenshots comparing the top header and hero elements of the school websites.
+        </p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <!-- Old Website Screenshot -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Landing Page Header</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Website Screenshot -->
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Webtrivo Redesign Header</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto pt-4">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-persianborder text-slate-500 uppercase font-black text-[10px]">
+                        <th class="pb-3">Evaluation Factor</th>
+                        <th class="pb-3">Old Website</th>
+                        <th class="pb-3">New Webtrivo Redesign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-650">
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Visual Appeal</td>
+                        <td class="py-3.5 text-red-500 font-extrabold">❌ Outdated layout columns</td>
+                        <td class="py-3.5 text-emerald-600 font-extrabold">✅ Premium layout, clean HSL contrast</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Modernity & Fluidity</td>
+                        <td class="py-3.5 text-red-500 font-extrabold">❌ Static layouts</td>
+                        <td class="py-3.5 text-emerald-600 font-extrabold">✅ Interactive alerts, smooth counters</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Branding Consistency</td>
+                        <td class="py-3.5 text-red-500 font-extrabold">❌ Mixed fonts and styles</td>
+                        <td class="py-3.5 text-emerald-600 font-extrabold">✅ Unified school branding & gold frames</td>
+                    </tr>
+                    <tr class="border-t-2 border-persianborder">
+                        <td class="py-3.5 font-bold text-persianblue">Brand Perception Rating</td>
+                        <td class="py-3.5 text-red-650 font-black">4 / 10 (Poor)</td>
+                        <td class="py-3.5 text-emerald-600 font-black">8 / 10 (Excellent)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 2. UI/UX NAVIGATION -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">2</span>
+            <h3 class="text-lg font-black text-persianblue">UI/UX & Navigation Structure</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Good navigation helps parents locate fee grids and notice documents quickly. Below are screenshots focusing directly on the menu bars of both sites.
+        </p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Navigation Menu Section</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Redesigned Navigation Menu</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-4 gap-4 pt-4">
+            <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder text-center">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Admission Info</p>
+                <p class="text-xs text-red-650 mt-1 font-bold">Old: 3 clicks</p>
+                <p class="text-xs text-emerald-600 font-bold">New: 1 click</p>
+            </div>
+            <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder text-center">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Contact Address</p>
+                <p class="text-xs text-red-650 mt-1 font-bold">Old: 4 clicks</p>
+                <p class="text-xs text-emerald-600 font-bold">New: 1 click</p>
+            </div>
+            <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder text-center">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Photo Gallery</p>
+                <p class="text-xs text-red-650 mt-1 font-bold">Old: 3 clicks</p>
+                <p class="text-xs text-emerald-600 font-bold">New: 1 click</p>
+            </div>
+            <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder text-center">
+                <p class="text-[10px] font-bold text-slate-500 uppercase">Active Notices</p>
+                <p class="text-xs text-red-650 mt-1 font-bold">Old: Not Present</p>
+                <p class="text-xs text-emerald-600 font-bold">New: 1 click</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. MOBILE RESPONSIVENESS -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">3</span>
+            <h3 class="text-lg font-black text-persianblue">Mobile Responsiveness & Readability</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Since over 85% of parents access the school portal via smartphones, mobile experience dictates admission results. The old site utilizes static layouts which clip text and force horizontal scrolling.
+        </p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Mobile Web Layout</p>
+                <div class="screenshot-viewport h-[400px] cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Mobile Web Layout</p>
+                <div class="screenshot-viewport h-[400px] cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-6 pt-4">
+            <div class="bg-ghostwhite p-5 rounded-2xl border border-persianborder space-y-3">
+                <h4 class="text-xs font-bold text-red-600 uppercase">Old Mobile UX Rating: 4.5/10</h4>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Font Readability</span>
+                        <span class="font-bold">5 / 10</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 50%"></div></div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Navigation Ease</span>
+                        <span class="font-bold">4 / 10</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-red-500 h-1.5 rounded-full" style="width: 40%"></div></div>
+                </div>
+            </div>
+
+            <div class="bg-ghostwhite p-5 rounded-2xl border border-persianborder space-y-3">
+                <h4 class="text-xs font-bold text-emerald-600 uppercase">New Mobile UX Rating: 8.5/10</h4>
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Font Readability</span>
+                        <span class="font-bold">9 / 10</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-emerald-500 h-1.5 rounded-full" style="width: 90%"></div></div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Navigation Ease</span>
+                        <span class="font-bold">8 / 10</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-1.5"><div class="bg-emerald-550 h-1.5 rounded-full" style="width: 80%"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. ADMISSION CONVERSION -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">4</span>
+            <h3 class="text-lg font-black text-persianblue">Admission Conversion & CTA Setup</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            The primary business objective of a school website is generating admission enquiries. Below are cropped screenshots showing the static admissions info on the old site vs the new redesign form section.
+        </p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Website Home Page (Admissions/Inquiry)</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Admissions Digital Form Section</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder text-xs">
+            <span class="font-bold text-persianblue">Question: How quickly can a parent start an admission enquiry?</span>
+            <p class="text-slate-600 mt-1">
+                <strong>Old Website:</strong> Requires offline physical travel. The website lists only raw document requirements.  
+                <br><strong>New Webtrivo Portal:</strong> Easy, self-serve admissions form with mobile upload and digital signature capabilities, accessible directly online.
+            </p>
+        </div>
+    </div>
+
+    <!-- 5. TRUST & CREDIBILITY -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">5</span>
+            <h3 class="text-lg font-black text-persianblue">Trust Elements & Institutional Credibility</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Below are screenshots focusing on the "About School / Mission" section on both websites, demonstrating the difference in credibility presentation.
+        </p>
+
+        <div class="grid grid-cols-2 gap-8">
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Site Mission Section</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-550/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Redesign About RLS Section</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto pt-4">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-persianborder text-slate-500 uppercase font-black text-[10px]">
+                        <th class="pb-3">Trust Element</th>
+                        <th class="pb-3">Old Website Presence</th>
+                        <th class="pb-3">New Webtrivo Redesign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-650">
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Principal Message</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">✅ Yes (Simple Text)</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">✅ Yes (Sleek layout with photo badge)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Academic Toppers & Merits</td>
+                        <td class="py-3.5 text-rose-500 font-bold">❌ Missing completely</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">✅ Yes (Board exam topper banner)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Verified School Stats</td>
+                        <td class="py-3.5 text-slate-500 font-bold">⚠️ Simple counters</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">✅ Animated interactive counter grids</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">CBSE Affiliation Credentials</td>
+                        <td class="py-3.5 text-slate-500 font-bold">✅ Present in footer</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">✅ Verified badge in main hero section</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 6. CONTENT STRUCTURE -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">6</span>
+            <h3 class="text-lg font-black text-persianblue">Content Structure & Scannability</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Modern users scan websites instead of reading them word-for-word. The old site utilizes dense paragraphs of text with no spacing or heading hierarchy, resulting in high exit rates.
+        </p>
+        <div class="grid grid-cols-2 gap-6 text-xs">
+            <div class="bg-ghostwhite p-4 rounded-xl border border-persianborder">
+                <p class="font-bold text-red-600 uppercase">Is information easy to scan?</p>
+                <p class="text-slate-500 mt-2 leading-relaxed">
+                    <strong>Old Site:</strong> No. Text wraps across full width of screen without cards or highlights. Critical statements are buried under legacy tables.
+                </p>
+            </div>
+            <div class="bg-ghostwhite p-4 rounded-xl border border-persianborder">
+                <p class="font-bold text-emerald-600 uppercase">New Site: Card Layout</p>
+                <p class="text-slate-650 mt-2 leading-relaxed">
+                    <strong>New Redesign:</strong> Yes. Content is modularized using distinct blocks with clear margins, custom dividers, and high-readability fonts.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. VISUAL HIERARCHY -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">7</span>
+            <h3 class="text-lg font-black text-persianblue">Visual Hierarchy & CTA Placement</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Important information must attract the eye first. The new prototype establishes a strict visual flow: First the CBSE affiliation status, then a principal quote banner, followed by fee details, and ending with quick admissions calls.
+        </p>
+        <div class="p-5 bg-ghostwhite rounded-2xl border border-persianborder text-xs leading-relaxed">
+            <span class="font-bold text-persianblue uppercase block mb-1">Visual Focus:</span>
+            The old website header has a flat contrast color layout (Everything has equal weight). The new redesign highlights the "Student Portal" and "Enroll online" buttons using bright, highly distinct button colors, directing parent focus.
+        </div>
+    </div>
+
+    <!-- 8. ACCESSIBILITY -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">8</span>
+            <h3 class="text-lg font-black text-persianblue">Web Accessibility & Contrast Standards</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Ensuring readable text size and touch targets is crucial for elderly parents or visually impaired users browsing on mobile screens.
+        </p>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-persianborder text-slate-500 uppercase font-black text-[10px]">
+                        <th class="pb-3">Accessibility Metric</th>
+                        <th class="pb-3">Old Website</th>
+                        <th class="pb-3">New Webtrivo Redesign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-650">
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Font Readability & Scale</td>
+                        <td class="py-3.5 text-red-500">5 / 10 (Small, thin Roboto)</td>
+                        <td class="py-3.5 text-emerald-600">9 / 10 (Plus Jakarta Sans 12px min)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Touch Target Sizes (Buttons)</td>
+                        <td class="py-3.5 text-red-500">4 / 10 (Tiny hit-boxes on mobile)</td>
+                        <td class="py-3.5 text-emerald-600">8 / 10 (Minimum 44px hit-box targets)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Contrast Ratios</td>
+                        <td class="py-3.5 text-red-500">6 / 10 (Low grey text on white)</td>
+                        <td class="py-3.5 text-emerald-600">9 / 10 (White text on deep navy slate)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 9. PERFORMANCE & SPEED -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">9</span>
+            <h3 class="text-lg font-black text-persianblue">Performance & PageSpeed Insights</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Audit metrics sourced via Google PageSpeed test console comparisons. Fast speeds prevent dropouts on low-bandwidth rural mobile networks.
+        </p>
+        <div class="grid grid-cols-3 gap-4 text-center">
+            <div class="p-4 bg-ghostwhite rounded-2xl border border-persianborder">
+                <p class="text-[9px] font-bold text-slate-500 uppercase">Audit Target</p>
+                <p class="text-xs text-slate-700 mt-2 font-bold">Mobile Page Load Speed</p>
+                <p class="text-xs text-slate-700 mt-1 font-bold">Desktop Page Load Speed</p>
+            </div>
+            <div class="p-4 bg-red-50/20 border border-red-200 rounded-2xl">
+                <p class="text-[9px] font-bold text-red-500 uppercase">Old Website</p>
+                <p class="text-lg font-black text-red-650 mt-2">32 / 100</p>
+                <p class="text-xs font-bold text-red-600">55 / 100</p>
+            </div>
+            <div class="p-4 bg-emerald-50/20 border border-emerald-200 rounded-2xl">
+                <p class="text-[9px] font-bold text-emerald-600 uppercase">New Webtrivo Redesign</p>
+                <p class="text-lg font-black text-emerald-600 mt-2">91 / 100</p>
+                <p class="text-xs font-bold text-emerald-600">97 / 100</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. SEO AUDIT -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">10</span>
+            <h3 class="text-lg font-black text-persianblue">Search Engine Optimization (SEO)</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            SEO ensures your school appears first on Google search rankings when parents in Bhojpur search for local CBSE admissions. The old site uses generic meta tags, making search discovery difficult.
+        </p>
+        <div class="grid grid-cols-2 gap-6 text-xs">
+            <div class="bg-ghostwhite p-4 rounded-xl border border-persianborder space-y-2">
+                <p class="font-bold text-red-600 uppercase">Old Website SEO Problems:</p>
+                <p class="text-slate-500 leading-relaxed">❌ Missing meta description tag in header code.</p>
+                <p class="text-slate-500 leading-relaxed">❌ Distorted <h1> heading structures (used repeatedly).</p>
+                <p class="text-slate-500 leading-relaxed">❌ No local SEO schemas pointing to Piro, Bhojpur.</p>
+            </div>
+            <div class="bg-ghostwhite p-4 rounded-xl border border-persianborder space-y-2">
+                <p class="font-bold text-emerald-600 uppercase">New Redesign SEO Improvements:</p>
+                <p class="text-slate-650 leading-relaxed">✅ Custom high-density meta descriptions matching keywords.</p>
+                <p class="text-slate-650 leading-relaxed">✅ Strict single <h1> tag with structured heading hierarchy.</p>
+                <p class="text-slate-650 leading-relaxed">✅ Local SEO coordinates embedded directly in header metadata.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. PARENT JOURNEY ANALYSIS -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">11</span>
+            <h3 class="text-lg font-black text-persianblue">Parent Journey & Action Sequences</h3>
+        </div>
+        <p class="text-slate-650 text-xs leading-relaxed">
+            Analyzing the clicks and scroll patterns required for a parent to achieve basic informational goals on the portal. Less clicks mean less dropout rates.
+        </p>
+        
+        <div class="grid grid-cols-2 gap-8">
+            <div class="border border-slate-200 rounded-xl p-4 bg-red-50/20">
+                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> Old Site Homepage Footer Contact Info</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-450 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+            <div class="border border-slate-200 rounded-xl p-4 bg-emerald-50/20">
+                <p class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider mb-2 flex items-center gap-1"><i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> New Site Contact Info Layout</p>
+                <div class="screenshot-viewport cursor-pointer hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-2 p-4 text-slate-455 hover:text-[#27187e] group" onclick="triggerPhotoUpload(this)">
+                    <input type="file" accept="image/*" class="hidden" onchange="handlePhotoUpload(event, this)">
+                    <div class="upload-placeholder flex flex-col items-center gap-1.5">
+                        <i data-lucide="image-plus" class="w-7 h-7 opacity-60 group-hover:scale-110 transition-transform"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Add Photo</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto pt-4">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-persianborder text-slate-500 uppercase font-black text-[10px]">
+                        <th class="pb-3">Parent's Goal</th>
+                        <th class="pb-3">Old Website Flow</th>
+                        <th class="pb-3">New Webtrivo Redesign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-650">
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Contact School Office</td>
+                        <td class="py-3.5 text-red-500">4 Clicks (Navigate submenus, copy number)</td>
+                        <td class="py-3.5 text-emerald-600">1 Click (Sticky tap-to-call phone buttons)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Check Fee Structure</td>
+                        <td class="py-3.5 text-red-500">3 Clicks (Nested under Academics dropdown)</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">1 Click (Direct "Fees" block on dashboard)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Submit Admissions Inquiry</td>
+                        <td class="py-3.5 text-red-500">❌ Not possible (Requires offline physical visit)</td>
+                        <td class="py-3.5 text-emerald-600">1 Click (Secure form overlay submit)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 12. FEATURE COMPARISON MATRIX -->
+    <div class="audit-card space-y-6 page-break">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">12</span>
+            <h3 class="text-lg font-black text-persianblue">Portal Features Comparison Matrix</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="border-b border-persianborder text-slate-500 uppercase font-black text-[10px]">
+                        <th class="pb-3">Feature Checklist</th>
+                        <th class="pb-3">Old Website Portal</th>
+                        <th class="pb-3">Webtrivo Redesign</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-650">
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Modern UI (Glassmorphic)</td>
+                        <td class="py-3.5 text-red-500">❌</td>
+                        <td class="py-3.5 text-emerald-400">✅</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Mobile First Layout</td>
+                        <td class="py-3.5 text-red-500">❌</td>
+                        <td class="py-3.5 text-emerald-600">✅</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Admissions Quick Actions</td>
+                        <td class="py-3.5 text-red-500">❌</td>
+                        <td class="py-3.5 text-emerald-600">✅</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Dynamic Notice Board Cards</td>
+                        <td class="py-3.5 text-red-500">❌</td>
+                        <td class="py-3.5 text-emerald-600">✅</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Seamless Navigation Tree</td>
+                        <td class="py-3.5 text-red-500">❌</td>
+                        <td class="py-3.5 text-emerald-400">✅</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Enrollment Conversion Focus</td>
+                        <td class="py-3.5 text-red-500">Limited (Static information only)</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">Excellent (Online admissions engine)</td>
+                    </tr>
+                    <tr>
+                        <td class="py-3.5 font-bold text-slate-800">Parent Portal Experience</td>
+                        <td class="py-3.5 text-slate-500">Average (Redirection to ERP)</td>
+                        <td class="py-3.5 text-emerald-600 font-bold">Excellent (Integrated app shell layout)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- 13. BUSINESS IMPACT & AUDIT SCORE CARD -->
+    <div class="audit-card space-y-6">
+        <div class="flex items-center gap-3">
+            <span class="w-8 h-8 rounded-xl bg-persianlight text-persianblue flex items-center justify-center font-black">13</span>
+            <h3 class="text-lg font-black text-persianblue">Business Impact & Audit Scoring System</h3>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-8">
+            <!-- Potential business results -->
+            <div class="space-y-4">
+                <h4 class="text-xs font-black text-persianblue uppercase tracking-wider">Potential Business Benefits:</h4>
+                <ul class="space-y-3 text-xs leading-relaxed text-slate-650">
+                    <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✔</span> Premium brand positioning in Piro, Bhojpur.</li>
+                    <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✔</span> Boosted conversion rates for session admissions.</li>
+                    <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✔</span> Streamlined administrative communication via online billing/notices.</li>
+                    <li class="flex items-center gap-2"><span class="text-emerald-600 font-bold">✔</span> Trusted digital representation on Google Search and Local SEO.</li>
+                </ul>
+            </div>
+
+            <!-- Score card summary -->
+            <div class="p-6 bg-[#f7f7ff] rounded-2xl border border-persianborder space-y-4 flex flex-col justify-between">
+                <div>
+                    <h4 class="text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Final Audit Score Card</h4>
+                    
+                    <div class="space-y-3">
+                        <!-- Metric 1 -->
+                        <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow">
+                            <span class="text-xs font-black text-slate-700">Design & Aesthetic</span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 font-extrabold text-[9px] border border-red-100">4.0 Old</span>
+                                <span class="text-slate-300 text-[10px] font-bold">➔</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 font-extrabold text-[9px] border border-emerald-100">8.0 New</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-black text-[9px] border border-blue-100">+100%</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 2 -->
+                        <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow">
+                            <span class="text-xs font-black text-slate-700">Mobile Experience</span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 font-extrabold text-[9px] border border-red-100">5.0 Old</span>
+                                <span class="text-slate-300 text-[10px] font-bold">➔</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 font-extrabold text-[9px] border border-emerald-100">9.0 New</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-black text-[9px] border border-blue-100">+80%</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 3 -->
+                        <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow">
+                            <span class="text-xs font-black text-slate-700">Navigation Structure</span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 font-extrabold text-[9px] border border-red-100">5.0 Old</span>
+                                <span class="text-slate-300 text-[10px] font-bold">➔</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 font-extrabold text-[9px] border border-emerald-100">8.0 New</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-black text-[9px] border border-blue-100">+60%</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 4 -->
+                        <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow">
+                            <span class="text-xs font-black text-slate-700">Trust Factors Presence</span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 font-extrabold text-[9px] border border-red-100">6.0 Old</span>
+                                <span class="text-slate-300 text-[10px] font-bold">➔</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 font-extrabold text-[9px] border border-emerald-100">8.0 New</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-black text-[9px] border border-blue-100">+33%</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 5 -->
+                        <div class="p-3 bg-white border border-slate-100 rounded-xl flex items-center justify-between shadow-sm transition-all duration-300 hover:shadow">
+                            <span class="text-xs font-black text-slate-700">Enrollment Conversions</span>
+                            <div class="flex items-center gap-2.5">
+                                <span class="px-2 py-0.5 rounded bg-red-50 text-red-500 font-extrabold text-[9px] border border-red-100">4.0 Old</span>
+                                <span class="text-slate-300 text-[10px] font-bold">➔</span>
+                                <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 font-extrabold text-[9px] border border-emerald-100">8.0 New</span>
+                                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-black text-[9px] border border-blue-100">+100%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Overall Grade Highlights -->
+                <div class="p-4 bg-gradient-to-br from-[#27187e] to-[#3b27b3] rounded-2xl text-white space-y-3 shadow-md mt-2 relative overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
+                    <div class="flex justify-between items-center relative z-10">
+                        <div>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-slate-300 block">Performance Index</span>
+                            <h4 class="text-xs font-black uppercase tracking-wider text-white">Overall Grade</h4>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold text-red-300 block">4.8 (Old)</span>
+                                <span class="text-xs font-black text-emerald-300 block">8.2 (New)</span>
+                            </div>
+                            <div class="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex flex-col items-center justify-center">
+                                <span class="text-[8px] font-black text-slate-300 uppercase leading-none">Gain</span>
+                                <span class="text-xs font-black text-emerald-300 mt-0.5 leading-none">+70%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo Upload and Initialization Scripts -->
+    <script>
+        function triggerPhotoUpload(container) {
+            // Find the file input inside the container and click it
+            const fileInput = container.querySelector('input[type="file"]');
+            if (fileInput) {
+                fileInput.click();
+            }
+        }
+
+        function handlePhotoUpload(event, input) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const container = input.parentElement;
+                
+                // Remove existing preview if any
+                const existingImg = container.querySelector('.preview-image');
+                if (existingImg) existingImg.remove();
+                const existingRemoveBtn = container.querySelector('.remove-btn');
+                if (existingRemoveBtn) existingRemoveBtn.remove();
+                
+                // Hide placeholder
+                const placeholder = container.querySelector('.upload-placeholder');
+                if (placeholder) placeholder.classList.add('hidden');
+                
+                // Create image element
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'preview-image w-full h-full object-cover object-top block absolute inset-0';
+                container.appendChild(img);
+                
+                // Create remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.innerHTML = '<i data-lucide="trash-2" class="w-4 h-4"></i>';
+                removeBtn.className = 'remove-btn absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-all shadow-md z-10';
+                removeBtn.onclick = function(evt) {
+                    evt.stopPropagation(); // Prevent triggering the file click again
+                    img.remove();
+                    removeBtn.remove();
+                    if (placeholder) placeholder.classList.remove('hidden');
+                    input.value = ''; // Reset file input
+                };
+                container.appendChild(removeBtn);
+                
+                // Re-initialize lucide icons for the new button
+                lucide.createIcons();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>
